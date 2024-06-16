@@ -40,6 +40,7 @@ func main() {
 	app.Get("/api/users/:id", getUser)
 	app.Post("/api/users", createUser)
 	app.Delete("/api/users/:id", deleteUser)
+	app.Patch("/api/users/:id", updateUser)
 
 	log.Fatal(app.Listen(":5001"))
 }
@@ -84,7 +85,6 @@ func createUser(c *fiber.Ctx) error {
 
 func deleteUser(c *fiber.Ctx) error {
 	id, err := strconv.Atoi(c.Params("id"))
-
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid ID",
@@ -95,6 +95,38 @@ func deleteUser(c *fiber.Ctx) error {
 		if user.ID == id {
 			users = append(users[:i], users[i+1:]...)
 			return c.JSON(fiber.Map{"message": "User deleted"})
+		}
+	}
+
+	return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+		"error": "User not found",
+	})
+}
+
+func updateUser(c *fiber.Ctx) error {
+
+	id, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid ID",
+		})
+	}
+
+	updatedUser := new(User)
+	if err := c.BodyParser(updatedUser); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Cannot parse JSON",
+		})
+	}
+
+	for i, user := range users {
+		if user.ID == id {
+			users[i].Firstname = updatedUser.Firstname
+			users[i].Lastname = updatedUser.Lastname
+			users[i].Email = updatedUser.Email
+			users[i].School = updatedUser.School
+			users[i].Major = updatedUser.Major
+			return c.JSON(users[i])
 		}
 	}
 
