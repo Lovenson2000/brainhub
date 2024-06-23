@@ -1,24 +1,47 @@
 package main
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/Lovenson2000/brainhub/cmd/controllers"
 	"github.com/gofiber/fiber/v2"
+	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 )
 
 func main() {
-	fmt.Println("Hello World")
+
+	db, err := sqlx.Connect("postgres", "user=postgres dbname=brainhub sslmode=disable password=Blatter@2000 host=localhost")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	defer db.Close()
+
+	if err := db.Ping(); err != nil {
+		log.Fatal(err)
+	} else {
+		log.Println("Successfully Connected")
+	}
 
 	app := fiber.New()
 
 	// User routes
-	app.Get("/api/users", controllers.GetUsers)
-	app.Get("/api/users/:id", controllers.GetUser)
-	app.Post("/api/users", controllers.CreateUser)
-	app.Delete("/api/users/:id", controllers.DeleteUser)
-	app.Patch("/api/users/:id", controllers.UpdateUser)
+	app.Get("/api/users", func(c *fiber.Ctx) error {
+		return controllers.GetUsers(db, c)
+	})
+	app.Get("/api/users/:id", func(c *fiber.Ctx) error {
+		return controllers.GetUser(db, c)
+	})
+	app.Post("/api/users", func(c *fiber.Ctx) error {
+		return controllers.CreateUser(db, c)
+	})
+	app.Delete("/api/users/:id", func(c *fiber.Ctx) error {
+		return controllers.DeleteUser(db, c)
+	})
+	app.Patch("/api/users/:id", func(c *fiber.Ctx) error {
+		return controllers.UpdateUser(db, c)
+	})
 
 	// Post routes
 	app.Get("/api/posts", controllers.GetPosts)

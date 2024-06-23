@@ -5,18 +5,24 @@ import (
 
 	"github.com/Lovenson2000/brainhub/pkg/model"
 	"github.com/gofiber/fiber/v2"
+	"github.com/jmoiron/sqlx"
 )
 
-var users = []model.User{
-	{ID: 1, Firstname: "John", Lastname: "Doe", Email: "john.doe@example.com", School: "Yuan Ze University", Major: "Computer Science"},
-	{ID: 2, Firstname: "Jane", Lastname: "Smith", Email: "jane.smith@example.com", School: "New York College", Major: "Biology"},
-}
+// GET ALL USERS
+func GetUsers(db *sqlx.DB, c *fiber.Ctx) error {
+	var users []model.User
+	err := db.Select(&users, "SELECT id, firstname, lastname, email, school, major, bio FROM users")
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to get users",
+		})
+	}
 
-func GetUsers(c *fiber.Ctx) error {
 	return c.JSON(users)
 }
 
-func GetUser(c *fiber.Ctx) error {
+// GET ONE USER
+func GetUser(db *sqlx.DB, c *fiber.Ctx) error {
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -24,18 +30,19 @@ func GetUser(c *fiber.Ctx) error {
 		})
 	}
 
-	for _, user := range users {
-		if user.ID == id {
-			return c.JSON(user)
-		}
+	var user model.User
+	err = db.Get(&user, "SELECT id, firstname, lastname, email, school, major, bio FROM users WHERE id=$1", id)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "User not found",
+		})
 	}
 
-	return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-		"error": "User not found",
-	})
+	return c.JSON(user)
 }
 
-func CreateUser(c *fiber.Ctx) error {
+// CREATE A USER
+func CreateUser(db *sqlx.DB, c *fiber.Ctx) error {
 	newUser := new(model.User)
 
 	if err := c.BodyParser(newUser); err != nil {
@@ -44,13 +51,48 @@ func CreateUser(c *fiber.Ctx) error {
 		})
 	}
 
-	newUser.ID = len(users) + 1
-	users = append(users, *newUser)
+	var numberOfUsers int
+	err := db.Get(&numberOfUsers, "SELECT COUNT(*) from users")
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to count users",
+		})
+	}
+
+	newUser.ID = numberOfUsers + 1
+
+	query := `INSERT INTO users (id, firstname, lastname, email, school, major, bio) VALUES ($1, $2, $3, $4, $5, $6, $7)`
+	_, err = db.Exec(query, newUser.ID, newUser.Firstname, newUser.Lastname, newUser.Email, newUser.School, newUser.Major, newUser.Bio)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to create user",
+		})
+	}
 
 	return c.Status(fiber.StatusCreated).JSON(newUser)
 }
 
-func UpdateUser(c *fiber.Ctx) error {
+// DELETE A USER
+func DeleteUser(db *sqlx.DB, c *fiber.Ctx) error {
+	id, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid ID",
+		})
+	}
+
+	_, err = db.Exec("DELETE FROM users WHERE id=$1", id)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to delete user",
+		})
+	}
+
+	return c.JSON(fiber.Map{"message": "User deleted"})
+}
+
+// UPDATE A USER
+func UpdateUser(db *sqlx.DB, c *fiber.Ctx) error {
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -65,38 +107,13 @@ func UpdateUser(c *fiber.Ctx) error {
 		})
 	}
 
-	for i, user := range users {
-		if user.ID == id {
-			users[i].Firstname = updatedUser.Firstname
-			users[i].Lastname = updatedUser.Lastname
-			users[i].Email = updatedUser.Email
-			users[i].School = updatedUser.School
-			users[i].Major = updatedUser.Major
-			return c.JSON(users[i])
-		}
-	}
-
-	return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-		"error": "User not found",
-	})
-}
-
-func DeleteUser(c *fiber.Ctx) error {
-	id, err := strconv.Atoi(c.Params("id"))
+	query := `UPDATE users SET firstname=$1, lastname=$2, email=$3, school=$4, major=$5, bio=$6 WHERE id=$7`
+	_, err = db.Exec(query, updatedUser.Firstname, updatedUser.Lastname, updatedUser.Email, updatedUser.School, updatedUser.Major, updatedUser.Bio, id)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid ID",
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to update user",
 		})
 	}
 
-	for i, user := range users {
-		if user.ID == id {
-			users = append(users[:i], users[i+1:]...)
-			return c.JSON(fiber.Map{"message": "User deleted"})
-		}
-	}
-
-	return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-		"error": "User not found",
-	})
+	return c.JSON(updatedUser)
 }
