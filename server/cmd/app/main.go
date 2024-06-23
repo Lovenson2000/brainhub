@@ -2,16 +2,28 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"github.com/Lovenson2000/brainhub/cmd/controllers"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
 
 func main() {
 
-	db, err := sqlx.Connect("postgres", "user=postgres dbname=brainhub sslmode=disable password=Blatter@2000 host=localhost")
+	if err := godotenv.Load("../../.env"); err != nil {
+		log.Fatalf("Error loading .env file: %v", err)
+	}
+
+	connectionString := "user=" + os.Getenv("DB_USER") +
+		" dbname=" + os.Getenv("DB_NAME") +
+		" sslmode=disable password=" + os.Getenv("DB_PASSWORD") +
+		" host=" + os.Getenv("DB_HOST") +
+		" port=" + os.Getenv("DB_PORT")
+
+	db, err := sqlx.Connect("postgres", connectionString)
 	if err != nil {
 		log.Fatalln(err)
 	}
