@@ -11,7 +11,7 @@ import (
 // GET ALL USERS
 func GetUsers(db *sqlx.DB, c *fiber.Ctx) error {
 	var users []model.User
-	err := db.Select(&users, "SELECT id, firstname, lastname, email, school, major, bio FROM users")
+	err := db.Select(&users, "SELECT id, firstname, lastname, email, school, major, bio FROM users ORDER BY id ASC")
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to get users",

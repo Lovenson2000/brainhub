@@ -5,21 +5,26 @@ import (
 
 	"github.com/Lovenson2000/brainhub/pkg/model"
 	"github.com/gofiber/fiber/v2"
+	"github.com/jmoiron/sqlx"
 )
-
-var posts = []model.Post{
-	{ID: 1, UserID: 1, Title: "How to learn Go?", Content: "I'm new to Go. Any tips?"},
-	{ID: 2, UserID: 2, Title: "Favorite Biology Resources", Content: "What are your favorite resources for learning biology?"},
-	{ID: 3, UserID: 3, Title: "Is TailwindCSS better than vanilla css ?", Content: "What are your thoughts regarding the comparisons between TailwindCSS and Bootstrap ?"},
-}
 
 // POST HANDLERS
 
-func GetPosts(c *fiber.Ctx) error {
+func GetPosts(db *sqlx.DB, c *fiber.Ctx) error {
+	var posts []model.Post
+	query := "SELECT id, user_id, content, image FROM posts ORDER BY id ASC"
+
+	err := db.Select(&posts, query)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to fetch posts",
+		})
+	}
+
 	return c.JSON(posts)
 }
 
-func GetPost(c *fiber.Ctx) error {
+func GetPost(db *sqlx.DB, c *fiber.Ctx) error {
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -27,18 +32,20 @@ func GetPost(c *fiber.Ctx) error {
 		})
 	}
 
-	for _, post := range posts {
-		if post.ID == id {
-			return c.JSON(post)
-		}
+	var post model.Post
+	query := "SELECT id, user_id, content, image FROM posts WHERE id=$1"
+
+	err = db.Get(&post, query, id)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "Post not found",
+		})
 	}
 
-	return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-		"error": "Post not found",
-	})
+	return c.JSON(post)
 }
 
-func CreatePost(c *fiber.Ctx) error {
+func CreatePost(db *sqlx.DB, c *fiber.Ctx) error {
 	newPost := new(model.Post)
 
 	if err := c.BodyParser(newPost); err != nil {
@@ -47,33 +54,18 @@ func CreatePost(c *fiber.Ctx) error {
 		})
 	}
 
-	newPost.ID = len(posts) + 1
-	posts = append(posts, *newPost)
+	query := `INSERT INTO posts (user_id, content, image) VALUES ($1, $2, $3) RETURNING id`
+	err := db.QueryRow(query, newPost.UserID, newPost.Content, newPost.Image).Scan(&newPost.ID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to create post",
+		})
+	}
 
 	return c.Status(fiber.StatusCreated).JSON(newPost)
 }
 
-func DeletePost(c *fiber.Ctx) error {
-	id, err := strconv.Atoi(c.Params("id"))
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid ID",
-		})
-	}
-
-	for i, post := range posts {
-		if post.ID == id {
-			posts = append(posts[:i], posts[i+1:]...)
-			return c.JSON(fiber.Map{"message": "Post deleted"})
-		}
-	}
-
-	return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-		"error": "Post not found",
-	})
-}
-
-func UpdatePost(c *fiber.Ctx) error {
+func UpdatePost(db *sqlx.DB, c *fiber.Ctx) error {
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -88,16 +80,50 @@ func UpdatePost(c *fiber.Ctx) error {
 		})
 	}
 
-	for i, post := range posts {
-		if post.ID == id {
-			posts[i].UserID = updatedPost.UserID
-			posts[i].Title = updatedPost.Title
-			posts[i].Content = updatedPost.Content
-			return c.JSON(posts[i])
-		}
+	existingPost := model.Post{}
+	err = db.Get(&existingPost, "SELECT id, user_id, content, image FROM posts WHERE id=$1", id)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "Post not found",
+		})
 	}
 
-	return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-		"error": "Post not found",
-	})
+	existingPost.Content = updatedPost.Content
+	existingPost.Image = updatedPost.Image
+
+	_, err = db.Exec("UPDATE posts SET content=$1, image=$2 WHERE id=$3",
+		existingPost.Content, existingPost.Image, id)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to update post",
+		})
+	}
+
+	return c.JSON(existingPost)
+}
+
+func DeletePost(db *sqlx.DB, c *fiber.Ctx) error {
+	id, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid ID",
+		})
+	}
+
+	var existingPost model.Post
+	err = db.Get(&existingPost, "SELECT id, user_id content, image FROM posts WHERE id=$1", id)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "Post not found",
+		})
+	}
+
+	_, err = db.Exec("DELETE FROM posts WHERE id=$1", id)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to delete post",
+		})
+	}
+
+	return c.JSON(fiber.Map{"message": "Post deleted"})
 }

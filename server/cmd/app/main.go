@@ -56,11 +56,25 @@ func main() {
 	})
 
 	// Post routes
-	app.Get("/api/posts", controllers.GetPosts)
-	app.Get("/api/posts/:id", controllers.GetPost)
-	app.Post("/api/posts", controllers.CreatePost)
-	app.Delete("/api/posts/:id", controllers.DeletePost)
-	app.Patch("/api/posts/:id", controllers.UpdatePost)
+	app.Get("/api/posts", func(c *fiber.Ctx) error {
+		return controllers.GetPosts(db, c)
+	})
+
+	app.Get("/api/posts/:id", func(c *fiber.Ctx) error {
+		return controllers.GetPost(db, c)
+	})
+
+	app.Post("/api/posts", func(c *fiber.Ctx) error {
+		return controllers.CreatePost(db, c)
+	})
+
+	app.Delete("/api/posts/:id", func(c *fiber.Ctx) error {
+		return controllers.DeletePost(db, c)
+	})
+
+	app.Patch("/api/posts/:id", func(c *fiber.Ctx) error {
+		return controllers.UpdatePost(db, c)
+	})
 
 	// Comment routes
 	app.Get("/api/comments", controllers.GetAllComments)
