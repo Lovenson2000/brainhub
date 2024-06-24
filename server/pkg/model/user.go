@@ -8,4 +8,5 @@ type User struct {
 	School    string `json:"school" db:"school"`
 	Major     string `json:"major" db:"major"`
 	Bio       string `json:"bio" db:"bio"`
+	Posts     []Post `json:"posts,omitempty" db:"-"`
 }

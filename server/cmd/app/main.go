@@ -43,7 +43,7 @@ func main() {
 		return controllers.GetUsers(db, c)
 	})
 	app.Get("/api/users/:id", func(c *fiber.Ctx) error {
-		return controllers.GetUser(db, c)
+		return controllers.GetUserWithPosts(db, c)
 	})
 	app.Post("/api/users", func(c *fiber.Ctx) error {
 		return controllers.CreateUser(db, c)

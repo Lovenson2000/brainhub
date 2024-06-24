@@ -21,8 +21,8 @@ func GetUsers(db *sqlx.DB, c *fiber.Ctx) error {
 	return c.JSON(users)
 }
 
-// GET ONE USER
-func GetUser(db *sqlx.DB, c *fiber.Ctx) error {
+// GET ONE USER WITH POSTS
+func GetUserWithPosts(db *sqlx.DB, c *fiber.Ctx) error {
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -30,6 +30,7 @@ func GetUser(db *sqlx.DB, c *fiber.Ctx) error {
 		})
 	}
 
+	// Fetch user details
 	var user model.User
 	err = db.Get(&user, "SELECT id, firstname, lastname, email, school, major, bio FROM users WHERE id=$1", id)
 	if err != nil {
@@ -37,6 +38,18 @@ func GetUser(db *sqlx.DB, c *fiber.Ctx) error {
 			"error": "User not found",
 		})
 	}
+
+	// Fetch posts associated with the user
+	var posts []model.Post
+	err = db.Select(&posts, "SELECT id, user_id, content, image FROM posts WHERE user_id=$1", id)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to fetch posts",
+		})
+	}
+
+	// Attach posts to the user struct
+	user.Posts = posts
 
 	return c.JSON(user)
 }
