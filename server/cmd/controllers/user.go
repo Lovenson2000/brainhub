@@ -64,18 +64,8 @@ func CreateUser(db *sqlx.DB, c *fiber.Ctx) error {
 		})
 	}
 
-	var numberOfUsers int
-	err := db.Get(&numberOfUsers, "SELECT COUNT(*) from users")
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Failed to count users",
-		})
-	}
-
-	newUser.ID = numberOfUsers + 1
-
-	query := `INSERT INTO users (id, firstname, lastname, email, school, major, bio) VALUES ($1, $2, $3, $4, $5, $6, $7)`
-	_, err = db.Exec(query, newUser.ID, newUser.Firstname, newUser.Lastname, newUser.Email, newUser.School, newUser.Major, newUser.Bio)
+	query := `INSERT INTO users (firstname, lastname, email, school, major, bio) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`
+	err := db.QueryRow(query, newUser.Firstname, newUser.Lastname, newUser.Email, newUser.School, newUser.Major, newUser.Bio).Scan(&newUser.ID)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to create user",
