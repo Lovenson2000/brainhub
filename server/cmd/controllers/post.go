@@ -62,6 +62,18 @@ func CreatePost(db *sqlx.DB, c *fiber.Ctx) error {
 		})
 	}
 
+	// Retrieve the user associated with the post
+	user := model.User{}
+	err = db.Get(&user, "SELECT id, firstname, lastname, email, school, major, bio FROM users WHERE id=$1", newPost.UserID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to retrieve user",
+		})
+	}
+
+	// Append the new post to the user's Posts slice
+	user.Posts = append(user.Posts, *newPost)
+
 	return c.Status(fiber.StatusCreated).JSON(newPost)
 }
 
