@@ -13,6 +13,8 @@ var studySessions = []model.StudySession{
 	{ID: 2, Title: "Biology Study Group", Description: "Study group for biology majors", StartTime: time.Now(), EndTime: time.Now().Add(1 * time.Hour), Location: "Biology Lab", Participants: []int{2}},
 }
 
+
+
 func GetStudySessions(c *fiber.Ctx) error {
 	return c.JSON(studySessions)
 }

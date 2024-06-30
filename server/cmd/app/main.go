@@ -7,33 +7,48 @@ import (
 	"github.com/Lovenson2000/brainhub/cmd/controllers"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
-	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
 
 func main() {
-
-	if err := godotenv.Load("../../.env"); err != nil {
-		log.Fatalf("Error loading .env file: %v", err)
-	}
-
-	connectionString := "user=" + os.Getenv("DB_USER") +
-		" dbname=" + os.Getenv("DB_NAME") +
-		" sslmode=disable password=" + os.Getenv("DB_PASSWORD") +
-		" host=" + os.Getenv("DB_HOST") +
-		" port=" + os.Getenv("DB_PORT")
-
-	db, err := sqlx.Connect("postgres", connectionString)
+	db, err := sqlx.Connect("postgres", os.Getenv("DATABASE_URL"))
 	if err != nil {
 		log.Fatalln(err)
 	}
 
 	defer db.Close()
 
+	// Create the 'users' table if it does not exist, matching the User struct fields
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS users (
+			id SERIAL PRIMARY KEY,
+			firstname TEXT,
+			lastname TEXT,
+			email TEXT UNIQUE,
+			school TEXT,
+			major TEXT,
+			bio TEXT
+		)`)
+
+	if err != nil {
+		log.Fatal("Failed to create users table:", err)
+	}
+
+	// Create the 'posts' table if it does not exist, matching the User struct fields
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS posts (
+		id SERIAL PRIMARY KEY,
+		user_id INT REFERENCES users(id) ON DELETE CASCADE,
+		content TEXT,
+		image TEXT
+	)`)
+
+	if err != nil {
+		log.Fatal("Failed to create posts table:", err)
+	}
+
 	if err := db.Ping(); err != nil {
-		log.Fatal(err)
+		log.Fatal("Failed to ping database:", err)
 	} else {
-		log.Println("Successfully Connected")
+		log.Println("Successfully connected to the database")
 	}
 
 	app := fiber.New()
@@ -90,5 +105,5 @@ func main() {
 	app.Delete("/api/study-sessions/:id", controllers.DeleteStudySession)
 	app.Patch("/api/study-sessions/:id", controllers.UpdateStudySession)
 
-	log.Fatal(app.Listen(":5001"))
+	log.Fatal(app.Listen(":8080"))
 }
