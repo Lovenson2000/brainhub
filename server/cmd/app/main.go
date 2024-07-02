@@ -24,6 +24,7 @@ func main() {
 			firstname TEXT,
 			lastname TEXT,
 			email TEXT UNIQUE,
+			password TEXT,
 			school TEXT,
 			major TEXT,
 			bio TEXT
@@ -89,6 +90,14 @@ func main() {
 
 	app.Patch("/api/posts/:id", func(c *fiber.Ctx) error {
 		return controllers.UpdatePost(db, c)
+	})
+
+	// Auth routes
+	app.Post("/api/register", func(c *fiber.Ctx) error {
+		return controllers.RegisterUser(db, c)
+	})
+	app.Post("/api/login", func(c *fiber.Ctx) error {
+		return controllers.LoginUser(db, c)
 	})
 
 	// Comment routes

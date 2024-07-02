@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/Lovenson2000/brainhub/pkg/model"
+	"github.com/Lovenson2000/brainhub/pkg/util"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 )
@@ -12,7 +13,7 @@ import (
 // GET ALL USERS
 func GetUsers(db *sqlx.DB, c *fiber.Ctx) error {
 	var users []model.User
-	err := db.Select(&users, "SELECT id, firstname, lastname, email, school, major, bio FROM users ORDER BY id ASC")
+	err := db.Select(&users, "SELECT id, firstname, lastname, email, password, school, major, bio FROM users ORDER BY id ASC")
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error":   "Failed to get users",
@@ -35,7 +36,7 @@ func GetUserWithPosts(db *sqlx.DB, c *fiber.Ctx) error {
 
 	// Fetch user details
 	var user model.User
-	err = db.Get(&user, "SELECT id, firstname, lastname, email, school, major, bio FROM users WHERE id=$1", id)
+	err = db.Get(&user, "SELECT id, firstname, lastname, email, password, school, major, bio FROM users WHERE id=$1", id)
 	if err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"error": "User not found",
@@ -67,8 +68,17 @@ func CreateUser(db *sqlx.DB, c *fiber.Ctx) error {
 		})
 	}
 
-	query := `INSERT INTO users (firstname, lastname, email, school, major, bio) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`
-	err := db.QueryRow(query, newUser.Firstname, newUser.Lastname, newUser.Email, newUser.School, newUser.Major, newUser.Bio).Scan(&newUser.ID)
+	hashedPassword, err := util.HashPassword(newUser.Password)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to hash password",
+		})
+	}
+
+	newUser.Password = string(hashedPassword)
+
+	query := `INSERT INTO users (firstname, lastname, email, password, school, major, bio) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`
+	err = db.QueryRow(query, newUser.Firstname, newUser.Lastname, newUser.Email, newUser.Password, newUser.School, newUser.Major, newUser.Bio).Scan(&newUser.ID)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to create user",
@@ -113,8 +123,18 @@ func UpdateUser(db *sqlx.DB, c *fiber.Ctx) error {
 		})
 	}
 
-	query := `UPDATE users SET firstname=$1, lastname=$2, email=$3, school=$4, major=$5, bio=$6 WHERE id=$7`
-	_, err = db.Exec(query, updatedUser.Firstname, updatedUser.Lastname, updatedUser.Email, updatedUser.School, updatedUser.Major, updatedUser.Bio, id)
+	if updatedUser.Password != "" {
+		hashedPassword, err := util.HashPassword(updatedUser.Password)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "Failed to hash password",
+			})
+		}
+		updatedUser.Password = hashedPassword
+	}
+
+	query := `UPDATE users SET firstname=$1, lastname=$2, email=$3, password=$4, school=$5, major=$6, bio=$7 WHERE id=$8`
+	_, err = db.Exec(query, updatedUser.Firstname, updatedUser.Lastname, updatedUser.Email, updatedUser.Password, updatedUser.School, updatedUser.Major, updatedUser.Bio, id)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to update user",
