@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"strconv"
 
 	"github.com/Lovenson2000/brainhub/pkg/model"
@@ -16,11 +15,9 @@ func GetUsers(db *sqlx.DB, c *fiber.Ctx) error {
 	err := db.Select(&users, "SELECT id, firstname, lastname, email, password, school, major, bio FROM users ORDER BY id ASC")
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error":   "Failed to get users",
-			"details": err.Error(),
+			"error": "Failed to get users",
 		})
 	}
-	fmt.Print(users)
 
 	return c.JSON(users)
 }

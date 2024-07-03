@@ -1,21 +1,31 @@
 package controllers
 
 import (
+	"fmt"
+	"log"
 	"os"
 
 	"github.com/Lovenson2000/brainhub/pkg/model"
 	"github.com/Lovenson2000/brainhub/pkg/util"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
+	"github.com/joho/godotenv"
 )
 
 func LoginUser(db *sqlx.DB, c *fiber.Ctx) error {
 
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
 	// Get the secret key from environment variables
 	jwtSecretKey := os.Getenv("JWT_SECRET_KEY")
 	if jwtSecretKey == "" {
+		log.Fatal("jwt Secret key not found in .env file")
+
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Secret key not found",
+			"error": "jwt Secret key not found",
 		})
 	}
 
@@ -31,7 +41,7 @@ func LoginUser(db *sqlx.DB, c *fiber.Ctx) error {
 
 	// STEP 2 Check if the user exists in the database
 	query := "SELECT id, firstname, lastname, email, password, school, major, bio FROM users WHERE email=$1"
-	err := db.Get(&user, query, req.Email)
+	err = db.Get(&user, query, req.Email)
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"error": "invalid email or password",
@@ -39,15 +49,15 @@ func LoginUser(db *sqlx.DB, c *fiber.Ctx) error {
 	}
 
 	// STEP 3 Compare the stored hashed password with the provided password
-	if !util.CheckPasswordHash(req.Password, user.Password) {
+	if !util.CheckPasswordHash(user.Password, req.Password) {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"error": "invalid email or password",
 		})
 	}
 
 	// STEP 3 Create JWT token
-
 	token, err := util.CreateJwtToken(user.ID, jwtSecretKey)
+	fmt.Println(token)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "cannot generate token",
@@ -58,5 +68,4 @@ func LoginUser(db *sqlx.DB, c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{
 		"Token": token,
 	})
-
 }

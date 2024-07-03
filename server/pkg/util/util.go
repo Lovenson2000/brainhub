@@ -20,14 +20,14 @@ func HashPassword(password string) (string, error) {
 	return string(bytes), err
 }
 
-func CheckPasswordHash(storedPassword, newPassWord string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(storedPassword), []byte(newPassWord))
+func CheckPasswordHash(hashedPassword, plainPassword string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(plainPassword))
 	return err == nil
 }
 
 func CreateJwtToken(userID int, secretKey string) (string, error) {
 
-	claims := jwt.NewWithClaims(jwt.SigningMethodES256, jwt.MapClaims{
+	claims := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id": userID,
 		"exp":     time.Now().Add(time.Hour * 24).Unix(), // Token expires in 24 hours
 		"iat":     time.Now().Unix(),
