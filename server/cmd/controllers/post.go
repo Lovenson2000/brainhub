@@ -82,7 +82,7 @@ func CreatePost(db *sqlx.DB, c *fiber.Ctx) error {
 
 	// UPLOADING FILE TO AWS S3
 	result, err := uploader.Upload(context.TODO(), &s3.PutObjectInput{
-		Bucket: aws.String("brainhub-server"),
+		Bucket: aws.String(os.Getenv("AWS_S3_BUCKET")),
 		Key:    aws.String(file.Filename),
 		Body:   f,
 		ACL:    "public-read",
@@ -93,7 +93,6 @@ func CreatePost(db *sqlx.DB, c *fiber.Ctx) error {
 		})
 	}
 
-	// Get other form values
 	userID, err := strconv.Atoi(c.FormValue("user_id"))
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{

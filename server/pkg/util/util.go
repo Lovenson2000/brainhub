@@ -3,6 +3,7 @@ package util
 import (
 	"time"
 
+	"github.com/Lovenson2000/brainhub/pkg/model"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/jmoiron/sqlx"
 	"golang.org/x/crypto/bcrypt"
@@ -40,4 +41,42 @@ func CreateJwtToken(userID int, secretKey string) (string, error) {
 	}
 
 	return tokenString, nil
+}
+
+func InsertPostIntoDB(db *sqlx.DB, userID int, content string, imageUrl string) (*model.Post, error) {
+
+	newPost := &model.Post{
+		UserID:  userID,
+		Content: content,
+		Image:   imageUrl,
+	}
+
+	query := `INSERT INTO posts (user_id, content, image) VALUES($1, $2, $3) RETURNING id, created_at`
+	err := db.QueryRow(query, newPost.UserID, newPost.Content, newPost.Image).Scan(&newPost.ID, &newPost.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+
+	return newPost, nil
+}
+
+func GetPostByID(db *sqlx.DB, id int) (*model.Post, error) {
+
+	var post model.Post
+	err := db.Get(&post, "SELECT id, user_id, content, image, created_at FROM posts WHERE id=$1", id)
+	if err != nil {
+		return nil, err
+	}
+
+	return &post, nil
+}
+
+func UpdatePostInDB(db *sqlx.DB, post *model.Post) error {
+	_, err := db.Exec("UPDATE posts SET content=$1, image=$2 WHERE id=$3", post.Content, post.Image, post.ID)
+	return err
+}
+
+func DeletePostFromDB(db *sqlx.DB, id int) error {
+	_, err := db.Exec("DELETE FROM posts WHERE id=$1", id)
+	return err
 }
