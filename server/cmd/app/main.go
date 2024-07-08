@@ -6,6 +6,7 @@ import (
 
 	"github.com/Lovenson2000/brainhub/cmd/controllers"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 )
@@ -17,6 +18,12 @@ func main() {
 	}
 
 	defer db.Close()
+
+	// Drop tables if they exist (for testing purposes)
+	_, err = db.Exec(`DROP TABLE IF EXISTS posts, users CASCADE`)
+	if err != nil {
+		log.Fatal("Failed to drop tables:", err)
+	}
 
 	// Create the 'users' table if it does not exist, matching the User struct fields
 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS users (
@@ -39,7 +46,8 @@ func main() {
 		id SERIAL PRIMARY KEY,
 		user_id INT REFERENCES users(id) ON DELETE CASCADE,
 		content TEXT,
-		image TEXT
+		image TEXT,
+		created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 	)`)
 
 	if err != nil {
@@ -53,6 +61,12 @@ func main() {
 	}
 
 	app := fiber.New()
+
+	// Enable CORS for all routes
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: "*", // Change this to specific origins if needed
+		AllowMethods: "GET,POST,HEAD,PUT,DELETE,PATCH,OPTIONS",
+	}))
 
 	// User routes
 	app.Get("/api/users", func(c *fiber.Ctx) error {
