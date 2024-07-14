@@ -2,107 +2,61 @@ package controllers
 
 import (
 	"strconv"
-	"time"
 
 	"github.com/Lovenson2000/brainhub/pkg/model"
 	"github.com/gofiber/fiber/v2"
+	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 )
 
-var studySessions = []model.StudySession{
-	{ID: 1, Title: "Go Programming Basics", Description: "Introduction to Go programming", StartTime: time.Now(), EndTime: time.Now().Add(2 * time.Hour), Location: "Library Room 101", Participants: []int{1, 2}},
-	{ID: 2, Title: "Biology Study Group", Description: "Study group for biology majors", StartTime: time.Now(), EndTime: time.Now().Add(1 * time.Hour), Location: "Biology Lab", Participants: []int{2}},
-}
+func GetStudySessions(db *sqlx.DB, c *fiber.Ctx) error {
 
+	var studySessions []model.StudySession
 
+	query := "SELECT id, title, description, start_time, end_time, location, participants FROM study_sessions ORDER BY id ASC"
+	err := db.Select(&studySessions, query)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to get study sessions",
+		})
 
-func GetStudySessions(c *fiber.Ctx) error {
+	}
 	return c.JSON(studySessions)
 }
 
-func GetStudySession(c *fiber.Ctx) error {
+func GetStudySession(db sqlx.DB, c *fiber.Ctx) error {
 	id, err := strconv.Atoi(c.Params("id"))
-
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid Study Session ID",
 		})
 	}
 
-	for _, studySession := range studySessions {
-		if studySession.ID == id {
-			return c.JSON(studySession)
-		}
+	var studySession model.StudySession
+	query := "SELECT id, title, description, start_time, end_time, location, participants FROM study_sessions WHERE id=$1"
+	err = db.Get(&studySession, query, id)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Study Session not found",
+		})
 	}
-
-	return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-		"error": "Study Session not found",
-	})
+	return c.JSON(studySession)
 }
 
-func CreateStudySession(c *fiber.Ctx) error {
+func CreateStudySession(db *sqlx.DB, c *fiber.Ctx) error {
 	newStudySession := new(model.StudySession)
-
 	if err := c.BodyParser(newStudySession); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "couldn't create Study Session",
+			"error": "Cannot parse JSON",
 		})
 	}
 
-	newStudySession.ID = len(studySessions) + 1
-	studySessions = append(studySessions, *newStudySession)
-
+	query := `INSERT INTO study_sessions (title, description, start_time, end_time, participants) VALUES ($1, $2, $3, $4, $5) RETURNING id`
+	err := db.QueryRow(query, newStudySession.Title, newStudySession.Description, newStudySession.StartTime, newStudySession.EndTime, pq.Array(newStudySession.Participants)).Scan(&newStudySession.ID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to create study session",
+		})
+	}
 	return c.Status(fiber.StatusCreated).JSON(newStudySession)
-}
-
-func UpdateStudySession(c *fiber.Ctx) error {
-
-	id, err := strconv.Atoi(c.Params("id"))
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid Study Session ID",
-		})
-	}
-
-	updatedStudySession := new(model.StudySession)
-	if err := c.BodyParser(updatedStudySession); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Error parsing Study Session body",
-		})
-	}
-
-	for i, studySession := range studySessions {
-		if studySession.ID == id {
-			studySessions[i].Title = updatedStudySession.Title
-			studySessions[i].Description = updatedStudySession.Description
-			studySessions[i].StartTime = updatedStudySession.StartTime
-			studySessions[i].EndTime = updatedStudySession.EndTime
-			studySessions[i].Location = updatedStudySession.Location
-			studySessions[i].Participants = updatedStudySession.Participants
-			return c.JSON(studySessions[i])
-		}
-	}
-
-	return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-		"error": "Study Session not found",
-	})
-}
-
-func DeleteStudySession(c *fiber.Ctx) error {
-	id, err := strconv.Atoi(c.Params("id"))
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid Study Session ID",
-		})
-	}
-
-	for i, studySession := range studySessions {
-		if studySession.ID == id {
-			studySessions = append(studySessions[:i], studySessions[i+1:]...)
-			return c.SendStatus(fiber.StatusNoContent)
-		}
-	}
-
-	return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-		"error": "Study Session not found",
-	})
 }
