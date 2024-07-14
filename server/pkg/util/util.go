@@ -80,3 +80,46 @@ func DeletePostFromDB(db *sqlx.DB, id int) error {
 	_, err := db.Exec("DELETE FROM posts WHERE id=$1", id)
 	return err
 }
+
+func CreateTables(db *sqlx.DB) error {
+
+	_, err := db.Exec(`CREATE TABLE IF NOT EXISTS users (
+			id SERIAL PRIMARY KEY,
+			firstname TEXT,
+			lastname TEXT,
+			email TEXT UNIQUE,
+			password TEXT,
+			school TEXT,
+			major TEXT,
+			bio TEXT
+		)`)
+	if err != nil {
+		return err
+	}
+
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS posts (
+		id SERIAL PRIMARY KEY,
+		user_id INT REFERENCES users(id) ON DELETE CASCADE,
+		content TEXT,
+		image TEXT,
+		created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+	)`)
+	if err != nil {
+		return err
+	}
+
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS study_sessions (
+		id SERIAL PRIMARY KEY,
+		title TEXT,
+		description TEXT,
+		start_time TIMESTAMPTZ,
+		end_time TIMESTAMPTZ,
+		user_id INT REFERENCES users(id) ON DELETE CASCADE,
+		participants INT[]
+	)`)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

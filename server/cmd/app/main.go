@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/Lovenson2000/brainhub/cmd/controllers"
+	"github.com/Lovenson2000/brainhub/pkg/util"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/jmoiron/sqlx"
@@ -19,39 +20,14 @@ func main() {
 
 	defer db.Close()
 
-	// Drop tables if they exist (for testing purposes)
-	_, err = db.Exec(`DROP TABLE IF EXISTS posts, users CASCADE`)
+	_, err = db.Exec("DROP TABLE IF EXISTS study_sessions, users CASCADE")
 	if err != nil {
 		log.Fatal("Failed to drop tables:", err)
 	}
 
-	// Create the 'users' table if it does not exist, matching the User struct fields
-	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS users (
-			id SERIAL PRIMARY KEY,
-			firstname TEXT,
-			lastname TEXT,
-			email TEXT UNIQUE,
-			password TEXT,
-			school TEXT,
-			major TEXT,
-			bio TEXT
-		)`)
-
+	err = util.CreateTables(db)
 	if err != nil {
-		log.Fatal("Failed to create users table:", err)
-	}
-
-	// Create the 'posts' table if it does not exist, matching the User struct fields
-	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS posts (
-		id SERIAL PRIMARY KEY,
-		user_id INT REFERENCES users(id) ON DELETE CASCADE,
-		content TEXT,
-		image TEXT,
-		created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-	)`)
-
-	if err != nil {
-		log.Fatal("Failed to create posts table:", err)
+		log.Fatalf("Failed to create database tables: %v\n", err)
 	}
 
 	if err := db.Ping(); err != nil {
@@ -122,11 +98,23 @@ func main() {
 	app.Patch("/api/comments/:id", controllers.UpdateComment)
 
 	// // StudySession routes
-	app.Get("/api/study-sessions", controllers.GetStudySessions)
-	app.Get("/api/study-sessions/:id", controllers.GetStudySession)
-	app.Post("/api/study-sessions", controllers.CreateStudySession)
-	app.Delete("/api/study-sessions/:id", controllers.DeleteStudySession)
-	app.Patch("/api/study-sessions/:id", controllers.UpdateStudySession)
+	app.Get("/api/study-sessions", func(c *fiber.Ctx) error {
+		return controllers.GetStudySessions(db, c)
+	})
+
+	app.Get("/api/study-sessions/:id", func(c *fiber.Ctx) error {
+		return controllers.GetStudySession(db, c)
+	})
+
+	app.Post("/api/study-sessions", func(c *fiber.Ctx) error {
+		return controllers.CreateStudySession(db, c)
+	})
+	app.Delete("/api/study-sessions/:id", func(c *fiber.Ctx) error {
+		return controllers.DeleteStudySession(db, c)
+	})
+	app.Patch("/api/study-sessions/:id", func(c *fiber.Ctx) error {
+		return controllers.UpdateStudySession(db, c)
+	})
 
 	log.Fatal(app.Listen(":8080"))
 }
