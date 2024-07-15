@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/Lovenson2000/brainhub/cmd/controllers"
+	"github.com/Lovenson2000/brainhub/cmd/middleware"
 	"github.com/Lovenson2000/brainhub/pkg/util"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -38,11 +39,14 @@ func main() {
 
 	app := fiber.New()
 
-	// Enable CORS for all routes
+	// TODO: TO BE CHANGED IN PRODUCTION
 	app.Use(cors.New(cors.Config{
-		AllowOrigins: "*", // Change this to specific origins if needed
+		AllowOrigins: "*",
 		AllowMethods: "GET,POST,HEAD,PUT,DELETE,PATCH,OPTIONS",
 	}))
+
+	app.Use(middleware.Logger())
+	app.Use(middleware.ErrorHandler())
 
 	// User routes
 	app.Get("/api/users", func(c *fiber.Ctx) error {

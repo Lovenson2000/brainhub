@@ -11,8 +11,7 @@ services:
     ports:
       - "5433:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
-      - ./init-db:/docker-entrypoint-initdb.d/
+      - postgres-data:/var/lib/postgresql/data
 
   api:
     build: .
@@ -27,6 +26,5 @@ services:
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
     depends_on:
       - db
-
 volumes:
-  pgdata: {}
+  postgres-data:
