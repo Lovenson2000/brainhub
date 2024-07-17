@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Study Session Management</title>
+    <style>
+      /* Reset some default browser styles */
+      body,
+      h1,
+      h2,
+      p,
+      form,
+      input,
+      textarea,
+      button {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      /* General styles */
+      body {
+        font-family: "Arial", sans-serif;
+        background-color: #f4f4f9;
+        color: #333;
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 50px auto;
+        padding: 20px;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        text-align: center;
+      }
+
+      h1 {
+        margin-bottom: 20px;
+        font-size: 2.5em;
+        color: #4a4a4a;
+      }
+
+      h2 {
+        margin-bottom: 10px;
+        font-size: 1.5em;
+        color: #4a4a4a;
+      }
+
+      .btn {
+        display: inline-block;
+        margin: 20px 0;
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background-color 0.3s;
+      }
+
+      .btn:hover {
+        background-color: #0056b3;
+      }
+
+      .sessions-container {
+        margin-top: 20px;
+      }
+
+      .session {
+        border: 1px solid #ddd;
+        padding: 20px;
+        margin-bottom: 20px;
+        border-radius: 4px;
+        background-color: #f9f9f9;
+        text-align: left;
+      }
+
+      .session h2 {
+        margin-bottom: 10px;
+        color: #555;
+      }
+
+      .session p {
+        margin: 5px 0;
+        color: #777;
+      }
+
+      #sessionFormContainer {
+        margin-top: 20px;
+        background-color: #f0f0f0;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      form {
+        display: flex;
+        flex-direction: column;
+        max-width: 400px;
+        margin: 0 auto;
+      }
+
+      form label {
+        margin-bottom: 5px;
+        color: #333;
+      }
+
+      form input,
+      form textarea {
+        margin-bottom: 10px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+
+      form button {
+        padding: 10px 20px;
+        background-color: #222566;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background-color 0.3s;
+      }
+
+      form button:hover {
+        background-color: #222566;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Study Session Management</h1>
+
+      <div id="loginFormContainer">
+        <h2>Login</h2>
+        <form id="loginForm">
+          <label for="email">Email:</label><br />
+          <input type="email" id="email" name="email" required /><br />
+
+          <label for="password">Password:</label><br />
+          <input type="password" id="password" name="password" required /><br />
+
+          <button type="submit">Login</button>
+        </form>
+      </div>
+
+      <button id="startSessionBtn" class="btn" style="display: none">
+        Start a Study Session
+      </button>
+
+      <div id="sessionFormContainer" style="display: none">
+        <h2>Create a Study Session</h2>
+        <form id="sessionForm">
+          <label for="title">Title:</label><br />
+          <input type="text" id="title" name="title" required /><br />
+
+          <label for="description">Description:</label><br />
+          <textarea
+            id="description"
+            name="description"
+            rows="4"
+            required
+          ></textarea
+          ><br />
+
+          <label for="startTime">Start Time:</label><br />
+          <input
+            type="datetime-local"
+            id="startTime"
+            name="startTime"
+            required
+          /><br />
+
+          <label for="endTime">End Time:</label><br />
+          <input
+            type="datetime-local"
+            id="endTime"
+            name="endTime"
+            required
+          /><br />
+
+          <button type="submit">Create Study Session</button>
+        </form>
+      </div>
+
+      <div id="studySessionDetails" class="sessions-container"></div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const loginForm = document.getElementById("loginForm");
+        const loginFormContainer =
+          document.getElementById("loginFormContainer");
+        const startSessionBtn = document.getElementById("startSessionBtn");
+        const sessionFormContainer = document.getElementById(
+          "sessionFormContainer"
+        );
+        const sessionForm = document.getElementById("sessionForm");
+        const studySessionDetails = document.getElementById(
+          "studySessionDetails"
+        );
+        let jwtToken = "";
+
+        loginForm.addEventListener("submit", function (event) {
+          event.preventDefault();
+
+          const formData = new FormData(loginForm);
+          const data = {
+            email: formData.get("email"),
+            password: formData.get("password"),
+          };
+
+          fetch("http://localhost:8080/api/login", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
+          })
+            .then((response) => response.json())
+            .then((result) => {
+              if (result.Token) {
+                jwtToken = result.Token;
+                loginFormContainer.style.display = "none";
+                startSessionBtn.style.display = "block";
+                alert("Login successful!");
+                fetchStudySessions();
+              } else {
+                alert("Login failed! Please check your credentials.");
+              }
+            })
+            .catch((error) => {
+              console.error("Error logging in:", error);
+            });
+        });
+
+        startSessionBtn.addEventListener("click", function () {
+          sessionFormContainer.style.display = "block";
+        });
+
+        sessionForm.addEventListener("submit", function (event) {
+          event.preventDefault();
+
+          const formData = new FormData(sessionForm);
+          const data = {
+            title: formData.get("title"),
+            description: formData.get("description"),
+            start_time: new Date(formData.get("startTime")).toISOString(),
+            end_time: new Date(formData.get("endTime")).toISOString(),
+          };
+
+          fetch("http://localhost:8080/api/study-sessions", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: "Bearer " + jwtToken,
+            },
+            body: JSON.stringify(data),
+          })
+            .then((response) => response.json())
+            .then((session) => {
+              const sessionElement = document.createElement("div");
+              sessionElement.classList.add("session");
+
+              sessionElement.innerHTML = `
+            <h2>${session.title}</h2>
+            <p><strong>Description:</strong> ${session.description}</p>
+            <p><strong>Start Time:</strong> ${new Date(
+              session.start_time
+            ).toLocaleString()}</p>
+            <p><strong>End Time:</strong> ${new Date(
+              session.end_time
+            ).toLocaleString()}</p>
+          `;
+
+              studySessionDetails.appendChild(sessionElement);
+              sessionForm.reset();
+              sessionFormContainer.style.display = "none";
+            })
+            .catch((error) => {
+              console.error("Error creating study session:", error);
+            });
+        });
+
+        function fetchStudySessions() {
+          fetch("http://localhost:8080/api/study-sessions", {
+            headers: {
+              Authorization: "Bearer " + jwtToken,
+            },
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              studySessionDetails.innerHTML = ""; // Clear previous sessions
+              data.forEach((session) => {
+                const sessionElement = document.createElement("div");
+                sessionElement.classList.add("session");
+
+                sessionElement.innerHTML = `
+              <h2>${session.title}</h2>
+              <p><strong>Description:</strong> ${session.description}</p>
+              <p><strong>Start Time:</strong> ${new Date(
+                session.start_time
+              ).toLocaleString()}</p>
+              <p><strong>End Time:</strong> ${new Date(
+                session.end_time
+              ).toLocaleString()}</p>
+            `;
+
+                studySessionDetails.appendChild(sessionElement);
+              });
+            })
+            .catch((error) => {
+              console.error("Error fetching study sessions:", error);
+            });
+        }
+      });
+    </script>
+  </body>
+</html>

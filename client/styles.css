@@ -1,0 +1,125 @@
+
+body,
+h1,
+h2,
+p,
+form,
+input,
+textarea,
+button {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f4f4f9;
+    color: #333;
+}
+
+.container {
+    max-inline-size: 800px;
+    margin: 50px auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+h1 {
+    margin-block-end: 20px;
+    font-size: 2.5em;
+    color: #4a4a4a;
+}
+
+h2 {
+    margin-block-end: 10px;
+    font-size: 1.5em;
+    color: #4a4a4a;
+}
+
+.btn {
+    display: inline-block;
+    margin: 20px 0;
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+}
+
+.btn:hover {
+    background-color: #0056b3;
+}
+
+.sessions-container {
+    margin-top: 20px;
+}
+
+.session {
+    border: 1px solid #ddd;
+    padding: 20px;
+    margin-block-end: 20px;
+    border-radius: 4px;
+    background-color: #f9f9f9;
+    text-align: start;
+}
+
+.session h2 {
+    margin-block-end: 10px;
+    color: #555;
+}
+
+.session p {
+    margin: 5px 0;
+    color: #777;
+}
+
+#sessionFormContainer {
+    margin-block-start: 20px;
+    background-color: #f0f0f0;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+form label {
+    margin-bottom: 5px;
+    color: #333;
+}
+
+form input,
+form textarea {
+    margin-bottom: 10px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+form button {
+    padding: 10px 20px;
+    background-color: #28a745;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+}
+
+form button:hover {
+    background-color: #218838;
+}

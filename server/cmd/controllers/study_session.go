@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/Lovenson2000/brainhub/pkg/model"
+	"github.com/Lovenson2000/brainhub/pkg/util"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 )
@@ -43,6 +44,26 @@ func GetStudySession(db *sqlx.DB, c *fiber.Ctx) error {
 	return c.JSON(studySession)
 }
 
+func GetStudySessionByUserId(db *sqlx.DB, c *fiber.Ctx) error {
+	userID, err := util.ExtractUserIDFromJwtToken(c)
+	if err != nil {
+		return err
+	}
+
+	var studySessions []model.StudySession
+
+	query := "SELECT id, user_id, title, description, start_time, end_time FROM study_sessions WHERE user_id=$1"
+	err = db.Select(&studySessions, query, userID)
+	if err != nil {
+		log.Fatal(err)
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to get study sessions",
+		})
+	}
+
+	return c.JSON(studySessions)
+}
+
 func CreateStudySession(db *sqlx.DB, c *fiber.Ctx) error {
 	newStudySession := new(model.StudySession)
 
@@ -77,7 +98,7 @@ func UpdateStudySession(db *sqlx.DB, c *fiber.Ctx) error {
 		})
 	}
 
-	query := `UPDATE study_sessions SET title=$1, description=$2, start_time=$3, end_time=$4, WHERE id=$5`
+	query := `UPDATE study_sessions SET title=$1, description=$2, start_time=$3, end_time=$4 WHERE id=$5`
 	_, err = db.Exec(query, updatedStudySession.Title, updatedStudySession.Description, updatedStudySession.StartTime, updatedStudySession.EndTime, id)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{

@@ -64,8 +64,9 @@ func LoginUser(db *sqlx.DB, c *fiber.Ctx) error {
 		})
 	}
 
-	// STEP 4 Send token as response
+	// STEP 4 Send token and user as response
 	return c.JSON(fiber.Map{
 		"Token": token,
+		"user":  user,
 	})
 }

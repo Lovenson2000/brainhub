@@ -8,7 +8,6 @@ import (
 	"github.com/Lovenson2000/brainhub/cmd/middleware"
 	"github.com/Lovenson2000/brainhub/pkg/util"
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 )
@@ -39,14 +38,12 @@ func main() {
 
 	app := fiber.New()
 
-	// TODO: TO BE CHANGED IN PRODUCTION
-	app.Use(cors.New(cors.Config{
-		AllowOrigins: "*",
-		AllowMethods: "GET,POST,HEAD,PUT,DELETE,PATCH,OPTIONS",
-	}))
-
+	//Custom middlewares
+	app.Use(middleware.CorsHandler())
 	app.Use(middleware.Logger())
 	app.Use(middleware.ErrorHandler())
+	app.Use(middleware.Compresssor())
+	app.Use(middleware.RateLimiter())
 
 	// User routes
 	app.Get("/api/users", func(c *fiber.Ctx) error {
@@ -65,33 +62,35 @@ func main() {
 		return controllers.UpdateUser(db, c)
 	})
 
-	// Post routes
-	app.Get("/api/posts", func(c *fiber.Ctx) error {
-		return controllers.GetPosts(db, c)
-	})
-
-	app.Get("/api/posts/:id", func(c *fiber.Ctx) error {
-		return controllers.GetPost(db, c)
-	})
-
-	app.Post("/api/posts", func(c *fiber.Ctx) error {
-		return controllers.CreatePost(db, c)
-	})
-
-	app.Delete("/api/posts/:id", func(c *fiber.Ctx) error {
-		return controllers.DeletePost(db, c)
-	})
-
-	app.Patch("/api/posts/:id", func(c *fiber.Ctx) error {
-		return controllers.UpdatePost(db, c)
-	})
-
-	// Auth routes
 	app.Post("/api/register", func(c *fiber.Ctx) error {
 		return controllers.RegisterUser(db, c)
 	})
 	app.Post("/api/login", func(c *fiber.Ctx) error {
 		return controllers.LoginUser(db, c)
+	})
+
+	app.Use(middleware.Auth())
+
+	// Protected Routes
+
+	// Post routes
+	posts := app.Group("api/posts")
+	posts.Use(middleware.Auth())
+
+	posts.Get("/", func(c *fiber.Ctx) error {
+		return controllers.GetPosts(db, c)
+	})
+	posts.Get("/:id", func(c *fiber.Ctx) error {
+		return controllers.GetPost(db, c)
+	})
+	posts.Post("/", func(c *fiber.Ctx) error {
+		return controllers.CreatePost(db, c)
+	})
+	posts.Delete("/:id", func(c *fiber.Ctx) error {
+		return controllers.DeletePost(db, c)
+	})
+	posts.Patch("/:id", func(c *fiber.Ctx) error {
+		return controllers.UpdatePost(db, c)
 	})
 
 	// Comment routes
@@ -101,22 +100,23 @@ func main() {
 	app.Delete("/api/comments/:id", controllers.DeleteComment)
 	app.Patch("/api/comments/:id", controllers.UpdateComment)
 
-	// // StudySession routes
-	app.Get("/api/study-sessions", func(c *fiber.Ctx) error {
-		return controllers.GetStudySessions(db, c)
-	})
+	// StudySession routes (with Auth middleware)
+	studySessions := app.Group("api/study-sessions")
+	studySessions.Use(middleware.Auth())
 
-	app.Get("/api/study-sessions/:id", func(c *fiber.Ctx) error {
+	studySessions.Get("/", func(c *fiber.Ctx) error {
+		return controllers.GetStudySessionsByUserId(db, c)
+	})
+	studySessions.Get("/:id", func(c *fiber.Ctx) error {
 		return controllers.GetStudySession(db, c)
 	})
-
-	app.Post("/api/study-sessions", func(c *fiber.Ctx) error {
+	studySessions.Post("/", func(c *fiber.Ctx) error {
 		return controllers.CreateStudySession(db, c)
 	})
-	app.Delete("/api/study-sessions/:id", func(c *fiber.Ctx) error {
+	studySessions.Delete("/:id", func(c *fiber.Ctx) error {
 		return controllers.DeleteStudySession(db, c)
 	})
-	app.Patch("/api/study-sessions/:id", func(c *fiber.Ctx) error {
+	studySessions.Patch("/:id", func(c *fiber.Ctx) error {
 		return controllers.UpdateStudySession(db, c)
 	})
 

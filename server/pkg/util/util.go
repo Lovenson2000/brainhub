@@ -1,10 +1,13 @@
 package util
 
 import (
+	"fmt"
+	"os"
 	"time"
 
 	"github.com/Lovenson2000/brainhub/pkg/model"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -122,4 +125,40 @@ func CreateTables(db *sqlx.DB) error {
 	}
 
 	return nil
+}
+
+func ExtractUserIDFromJwtToken(c *fiber.Ctx) (int, error) {
+	authHeader := c.Get("Authorization")
+	if authHeader == "" {
+		return 0, fiber.NewError(fiber.StatusBadRequest, "Missing authorization header")
+	}
+
+	tokenString := authHeader[len("Bearer "):]
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte(os.Getenv("JWT_SECRET_KEY")), nil
+	})
+	if err != nil {
+		return 0, fiber.NewError(fiber.StatusUnauthorized, "Invalid or expired token")
+	}
+
+	if !token.Valid {
+		return 0, fiber.NewError(fiber.StatusUnauthorized, "Invalid token")
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return 0, fiber.NewError(fiber.StatusUnauthorized, "Invalid token claims")
+	}
+
+	userIDFloat64, ok := claims["user_id"].(float64)
+	if !ok {
+		return 0, fiber.NewError(fiber.StatusUnauthorized, "Invalid user ID in token")
+	}
+	userID := int(userIDFloat64)
+
+	return userID, nil
 }

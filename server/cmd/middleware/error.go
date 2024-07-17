@@ -20,5 +20,4 @@ func ErrorHandler() fiber.Handler {
 		}
 		return nil
 	}
-
 }
