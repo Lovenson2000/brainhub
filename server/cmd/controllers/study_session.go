@@ -44,7 +44,7 @@ func GetStudySession(db *sqlx.DB, c *fiber.Ctx) error {
 	return c.JSON(studySession)
 }
 
-func GetStudySessionByUserId(db *sqlx.DB, c *fiber.Ctx) error {
+func GetStudySessionsByUserId(db *sqlx.DB, c *fiber.Ctx) error {
 	userID, err := util.ExtractUserIDFromJwtToken(c)
 	if err != nil {
 		return err
@@ -65,21 +65,38 @@ func GetStudySessionByUserId(db *sqlx.DB, c *fiber.Ctx) error {
 }
 
 func CreateStudySession(db *sqlx.DB, c *fiber.Ctx) error {
+	log.Println("Starting CreateStudySession")
+
 	newStudySession := new(model.StudySession)
 
 	if err := c.BodyParser(newStudySession); err != nil {
+		log.Println("Error parsing request body:", err)
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Cannot parse JSON",
 		})
 	}
 
-	query := `INSERT INTO study_sessions (user_id, title, description, start_time, end_time) VALUES ($1, $2, $3, $4, $5) RETURNING id`
-	err := db.QueryRow(query, newStudySession.UserID, newStudySession.Title, newStudySession.Description, newStudySession.StartTime, newStudySession.EndTime).Scan(&newStudySession.ID)
+	userID, err := util.ExtractUserIDFromJwtToken(c)
 	if err != nil {
+		log.Println("Error extracting user ID from JWT token:", err)
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized",
+		})
+	}
+	newStudySession.UserID = userID
+
+	log.Printf("Creating study session for user ID %d with title %s", newStudySession.UserID, newStudySession.Title)
+
+	query := `INSERT INTO study_sessions (user_id, title, description, start_time, end_time) VALUES ($1, $2, $3, $4, $5) RETURNING id`
+	err = db.QueryRow(query, newStudySession.UserID, newStudySession.Title, newStudySession.Description, newStudySession.StartTime, newStudySession.EndTime).Scan(&newStudySession.ID)
+	if err != nil {
+		log.Println("Error inserting study session into database:", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to create study session",
 		})
 	}
+
+	log.Printf("Successfully created study session with ID %d for user ID %d", newStudySession.ID, newStudySession.UserID)
 	return c.Status(fiber.StatusCreated).JSON(newStudySession)
 }
 
