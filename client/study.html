@@ -1,150 +1,303 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Study Session Management</title>
-  <link rel="stylesheet" href="styles.css">
-  <style>
-    /* styles omitted for brevity */
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h1>Study Session Management</h1>
-    <div id="loginFormContainer">
-      <h2>Login</h2>
-      <form id="loginForm">
-        <label for="email">Email:</label><br />
-        <input type="email" id="email" name="email" required /><br />
-        <label for="password">Password:</label><br />
-        <input type="password" id="password" name="password" required /><br />
-        <button type="submit">Login</button>
-      </form>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Study Session Management</title>
+  </head>
+  <body
+    style="
+      font-family: Arial, sans-serif;
+      background-color: #f0f0f0;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    "
+  >
+    <div
+      class="container"
+      style="
+        max-width: 600px;
+        margin: 20px auto;
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      "
+    >
+      <h1 style="text-align: center; color: #007bff">
+        Study Session Management
+      </h1>
+
+      <div id="loginFormContainer" style="margin-bottom: 20px">
+        <h2 style="color: #007bff">Login</h2>
+        <form id="loginForm">
+          <label for="email">Email:</label><br />
+          <input
+            type="email"
+            id="email"
+            name="email"
+            required
+            style="
+              width: 100%;
+              padding: 8px;
+              margin-bottom: 10px;
+              border: 1px solid #ccc;
+              border-radius: 4px;
+            "
+          /><br />
+          <label for="password">Password:</label><br />
+          <input
+            type="password"
+            id="password"
+            name="password"
+            required
+            style="
+              width: 100%;
+              padding: 8px;
+              margin-bottom: 10px;
+              border: 1px solid #ccc;
+              border-radius: 4px;
+            "
+          /><br />
+          <button
+            type="submit"
+            style="
+              background-color: #0e1365;
+              color: white;
+              border: none;
+              padding: 10px 20px;
+              cursor: pointer;
+              border-radius: 4px;
+            "
+          >
+            Login
+          </button>
+        </form>
+      </div>
+
+      <button
+        id="startSessionBtn"
+        class="btn"
+        style="
+          display: none;
+          background-color: #2927a8;
+          color: white;
+          border: none;
+          padding: 10px 20px;
+          cursor: pointer;
+          border-radius: 4px;
+        "
+      >
+        Start a Study Session
+      </button>
+
+      <div id="sessionFormContainer" style="display: none; margin-top: 20px">
+        <h2 style="color: #3d23c0">Create a Study Session</h2>
+        <form id="sessionForm">
+          <label for="title">Title:</label><br />
+          <input
+            type="text"
+            id="title"
+            name="title"
+            required
+            style="
+              width: 100%;
+              padding: 8px;
+              margin-bottom: 10px;
+              border: 1px solid #ccc;
+              border-radius: 4px;
+            "
+          /><br />
+          <label for="description">Description:</label><br />
+          <textarea
+            id="description"
+            name="description"
+            rows="4"
+            required
+            style="
+              width: 100%;
+              padding: 8px;
+              margin-bottom: 10px;
+              border: 1px solid #ccc;
+              border-radius: 4px;
+            "
+          ></textarea
+          ><br />
+          <label for="startTime">Start Time:</label><br />
+          <input
+            type="datetime-local"
+            id="startTime"
+            name="startTime"
+            required
+            style="
+              width: 100%;
+              padding: 8px;
+              margin-bottom: 10px;
+              border: 1px solid #ccc;
+              border-radius: 4px;
+            "
+          /><br />
+          <label for="endTime">End Time:</label><br />
+          <input
+            type="datetime-local"
+            id="endTime"
+            name="endTime"
+            required
+            style="
+              width: 100%;
+              padding: 8px;
+              margin-bottom: 10px;
+              border: 1px solid #ccc;
+              border-radius: 4px;
+            "
+          /><br />
+          <button
+            type="submit"
+            style="
+              background-color: #007bff;
+              color: white;
+              border: none;
+              padding: 10px 20px;
+              cursor: pointer;
+              border-radius: 4px;
+            "
+          >
+            Create Study Session
+          </button>
+        </form>
+      </div>
+
+      <div id="studySessionDetails" class="sessions-container"></div>
     </div>
-    <button id="startSessionBtn" class="btn" style="display: none">Start a Study Session</button>
-    <div id="sessionFormContainer" style="display: none">
-      <h2>Create a Study Session</h2>
-      <form id="sessionForm">
-        <label for="title">Title:</label><br />
-        <input type="text" id="title" name="title" required /><br />
-        <label for="description">Description:</label><br />
-        <textarea id="description" name="description" rows="4" required></textarea><br />
-        <label for="startTime">Start Time:</label><br />
-        <input type="datetime-local" id="startTime" name="startTime" required /><br />
-        <label for="endTime">End Time:</label><br />
-        <input type="datetime-local" id="endTime" name="endTime" required /><br />
-        <button type="submit">Create Study Session</button>
-      </form>
-    </div>
-    <div id="studySessionDetails" class="sessions-container"></div>
-  </div>
-  <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      const loginForm = document.getElementById("loginForm");
-      const loginFormContainer = document.getElementById("loginFormContainer");
-      const startSessionBtn = document.getElementById("startSessionBtn");
-      const sessionFormContainer = document.getElementById("sessionFormContainer");
-      const sessionForm = document.getElementById("sessionForm");
-      const studySessionDetails = document.getElementById("studySessionDetails");
-      let jwtToken = "";
 
-      loginForm.addEventListener("submit", function (event) {
-        event.preventDefault();
-        const formData = new FormData(loginForm);
-        const data = {
-          email: formData.get("email"),
-          password: formData.get("password")
-        };
-        fetch("http://localhost:8080/api/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data)
-        })
-          .then((response) => response.json())
-          .then((result) => {
-            if (result.Token) {
-              jwtToken = result.Token;
-              loginFormContainer.style.display = "none";
-              startSessionBtn.style.display = "block";
-              alert("Login successful!");
-              fetchStudySessions();
-            } else {
-              alert("Login failed! Please check your credentials.");
-            }
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const loginForm = document.getElementById("loginForm");
+        const loginFormContainer =
+          document.getElementById("loginFormContainer");
+        const startSessionBtn = document.getElementById("startSessionBtn");
+        const sessionFormContainer = document.getElementById(
+          "sessionFormContainer"
+        );
+        const sessionForm = document.getElementById("sessionForm");
+        const studySessionDetails = document.getElementById(
+          "studySessionDetails"
+        );
+        let jwtToken = "";
+
+        loginForm.addEventListener("submit", function (event) {
+          event.preventDefault();
+          const formData = new FormData(loginForm);
+          const data = {
+            email: formData.get("email"),
+            password: formData.get("password"),
+          };
+          fetch("http://localhost:8080/api/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
           })
-          .catch((error) => {
-            console.error("Error logging in:", error);
-          });
-      });
+            .then((response) => response.json())
+            .then((result) => {
+              if (result.Token) {
+                jwtToken = result.Token;
+                loginFormContainer.style.display = "none";
+                startSessionBtn.style.display = "block";
+                alert("Login successful!");
+                fetchStudySessions();
+              } else {
+                alert("Login failed! Please check your credentials.");
+              }
+            })
+            .catch((error) => {
+              console.error("Error logging in:", error);
+            });
+        });
 
-      startSessionBtn.addEventListener("click", function () {
-        sessionFormContainer.style.display = "block";
-      });
+        startSessionBtn.addEventListener("click", function () {
+          sessionFormContainer.style.display = "block";
+        });
 
-      sessionForm.addEventListener("submit", function (event) {
-        event.preventDefault();
-        const formData = new FormData(sessionForm);
-        const data = {
-          title: formData.get("title"),
-          description: formData.get("description"),
-          start_time: new Date(formData.get("startTime")).toISOString(),
-          end_time: new Date(formData.get("endTime")).toISOString()
-        };
-        fetch("http://localhost:8080/api/study-sessions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer " + jwtToken
-          },
-          body: JSON.stringify(data)
-        })
-          .then((response) => response.json())
-          .then((session) => {
-            const sessionElement = document.createElement("div");
-            sessionElement.classList.add("session");
-            sessionElement.innerHTML = `
-              <h2>${session.title}</h2>
-              <p><strong>Description:</strong> ${session.description}</p>
-              <p><strong>Start Time:</strong> ${new Date(session.start_time).toLocaleString()}</p>
-              <p><strong>End Time:</strong> ${new Date(session.end_time).toLocaleString()}</p>
-            `;
-            studySessionDetails.appendChild(sessionElement);
-            sessionForm.reset();
-            sessionFormContainer.style.display = "none";
+        sessionForm.addEventListener("submit", function (event) {
+          event.preventDefault();
+          const formData = new FormData(sessionForm);
+          const data = {
+            title: formData.get("title"),
+            description: formData.get("description"),
+            start_time: new Date(formData.get("startTime")).toISOString(),
+            end_time: new Date(formData.get("endTime")).toISOString(),
+          };
+          fetch("http://localhost:8080/api/study-sessions", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: "Bearer " + jwtToken,
+            },
+            body: JSON.stringify(data),
           })
-          .catch((error) => {
-            console.error("Error creating study session:", error);
-          });
-      });
-
-      function fetchStudySessions() {
-        fetch("http://localhost:8080/api/study-sessions", {
-          method: "GET",
-          headers: {
-            Authorization: "Bearer " + jwtToken
-          }
-        })
-          .then((response) => response.json())
-          .then((sessions) => {
-            studySessionDetails.innerHTML = "";
-            sessions.forEach((session) => {
+            .then((response) => response.json())
+            .then((session) => {
               const sessionElement = document.createElement("div");
               sessionElement.classList.add("session");
+              sessionElement.style.border = "1px solid #ccc";
+              sessionElement.style.borderRadius = "8px";
+              sessionElement.style.padding = "10px";
+              sessionElement.style.marginTop = "10px";
               sessionElement.innerHTML = `
-                <h2>${session.title}</h2>
-                <p><strong>Description:</strong> ${session.description}</p>
-                <p><strong>Start Time:</strong> ${new Date(session.start_time).toLocaleString()}</p>
-                <p><strong>End Time:</strong> ${new Date(session.end_time).toLocaleString()}</p>
-              `;
+            <h2 style="color: #007bff;">${session.title}</h2>
+            <p><strong>Description:</strong> ${session.description}</p>
+            <p><strong>Start Time:</strong> ${new Date(
+              session.start_time
+            ).toLocaleString()}</p>
+            <p><strong>End Time:</strong> ${new Date(
+              session.end_time
+            ).toLocaleString()}</p>
+          `;
               studySessionDetails.appendChild(sessionElement);
+              sessionForm.reset();
+              sessionFormContainer.style.display = "none";
+            })
+            .catch((error) => {
+              console.error("Error creating study session:", error);
             });
+        });
+
+        function fetchStudySessions() {
+          fetch("http://localhost:8080/api/study-sessions", {
+            method: "GET",
+            headers: {
+              Authorization: "Bearer " + jwtToken,
+            },
           })
-          .catch((error) => {
-            console.error("Error fetching study sessions:", error);
-          });
-      }
-    });
-  </script>
-</body>
+            .then((response) => response.json())
+            .then((sessions) => {
+              studySessionDetails.innerHTML = "";
+              sessions.forEach((session) => {
+                const sessionElement = document.createElement("div");
+                sessionElement.classList.add("session");
+                sessionElement.style.border = "1px solid #ccc";
+                sessionElement.style.borderRadius = "8px";
+                sessionElement.style.padding = "10px";
+                sessionElement.style.marginTop = "10px";
+                sessionElement.innerHTML = `
+              <h2 style="color: #007bff;">${session.title}</h2>
+              <p><strong>Description:</strong> ${session.description}</p>
+              <p><strong>Start Time:</strong> ${new Date(
+                session.start_time
+              ).toLocaleString()}</p>
+              <p><strong>End Time:</strong> ${new Date(
+                session.end_time
+              ).toLocaleString()}</p>
+            `;
+                studySessionDetails.appendChild(sessionElement);
+              });
+            })
+            .catch((error) => {
+              console.error("Error fetching study sessions:", error);
+            });
+        }
+      });
+    </script>
+  </body>
 </html>

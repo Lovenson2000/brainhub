@@ -13,6 +13,7 @@ import (
 )
 
 func main() {
+
 	db, err := sqlx.Connect("postgres", os.Getenv("DATABASE_URL"))
 	if err != nil {
 		log.Fatalln(err)
@@ -67,6 +68,10 @@ func main() {
 	})
 	app.Post("/api/login", func(c *fiber.Ctx) error {
 		return controllers.LoginUser(db, c)
+	})
+
+	app.Get("/api/study-sessions", func(c *fiber.Ctx) error {
+		return controllers.GetStudySessions(db, c)
 	})
 
 	app.Use(middleware.Auth())
