@@ -52,3 +52,22 @@ CREATE TABLE
         message TEXT,
         created_at TIMESTAMP
     );
+
+CREATE TABLE
+    IF NOT EXISTS documents (
+        id SERIAL PRIMARY KEY,
+        study_session_id INTEGER REFERENCES study_sessions (id) ON DELETE CASCADE,
+        user_id INTEGER REFERENCES users (id),
+        url TEXT NOT NULL,
+        uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+CREATE TABLE
+    IF NOT EXISTS notes (
+        id SERIAL PRIMARY KEY,
+        study_session_id INTEGER REFERENCES study_sessions (id) ON DELETE CASCADE,
+        user_id INTEGER REFERENCES users (id),
+        content TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );

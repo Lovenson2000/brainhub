@@ -62,14 +62,14 @@ func CreatePost(db *sqlx.DB, c *fiber.Ctx) error {
 	}
 
 	// SETUP AWS S3 UPLOADER
-	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(os.Getenv("AWS_REGION")))
+	config, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(os.Getenv("AWS_REGION")))
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to load AWS config",
 		})
 	}
 
-	client := s3.NewFromConfig(cfg)
+	client := s3.NewFromConfig(config)
 	uploader := manager.NewUploader(client)
 
 	f, err := file.Open()
