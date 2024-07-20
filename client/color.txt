@@ -1,2 +1,0 @@
-Quaternary = #222566
-Light-grey = #F6F8FA
