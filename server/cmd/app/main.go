@@ -125,5 +125,25 @@ func main() {
 		return controllers.UpdateStudySession(db, c)
 	})
 
+	// Document routes
+	// Document routes
+	studySessions.Post("/:id/documents", func(c *fiber.Ctx) error {
+		return controllers.UploadDocument(db, c)
+	})
+	studySessions.Get("/:id/documents", func(c *fiber.Ctx) error {
+		return controllers.GetDocumentsByStudySession(db, c)
+	})
+	studySessions.Delete("/:id/documents/:docId", func(c *fiber.Ctx) error {
+		return controllers.DeleteDocument(db, c)
+	})
+
+	// New Document routes
+	app.Get("/api/documents", func(c *fiber.Ctx) error {
+		return controllers.GetAllDocuments(db, c)
+	})
+	app.Get("/api/users/:userID/documents", func(c *fiber.Ctx) error {
+		return controllers.GetDocumentsByUserID(db, c)
+	})
+
 	log.Fatal(app.Listen(":8080"))
 }

@@ -85,43 +85,47 @@ func DeletePostFromDB(db *sqlx.DB, id int) error {
 }
 
 func CreateTables(db *sqlx.DB) error {
-
-	_, err := db.Exec(`CREATE TABLE IF NOT EXISTS users (
+	queries := []string{
+		`CREATE TABLE IF NOT EXISTS users (
 			id SERIAL PRIMARY KEY,
-			firstname TEXT,
-			lastname TEXT,
-			email TEXT UNIQUE,
-			password TEXT,
-			school TEXT,
-			major TEXT,
+			firstname VARCHAR(50),
+			lastname VARCHAR(50),
+			email VARCHAR(100) UNIQUE NOT NULL,
+			password VARCHAR(100) NOT NULL,
+			school VARCHAR(100),
+			major VARCHAR(100),
 			bio TEXT
-		)`)
-	if err != nil {
-		return err
+		)`,
+		`CREATE TABLE IF NOT EXISTS posts (
+			id SERIAL PRIMARY KEY,
+			user_id INT REFERENCES users(id) ON DELETE CASCADE,
+			content TEXT,
+			image TEXT,
+			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+		)`,
+		`CREATE TABLE IF NOT EXISTS study_sessions (
+			id SERIAL PRIMARY KEY,
+			user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+			title VARCHAR(100) NOT NULL,
+			description TEXT,
+			start_time TIMESTAMP,
+			end_time TIMESTAMP
+		)`,
+		`CREATE TABLE IF NOT EXISTS documents (
+			id SERIAL PRIMARY KEY,
+			study_session_id INTEGER REFERENCES study_sessions(id) ON DELETE CASCADE,
+			title VARCHAR(100),
+			url VARCHAR(255) NOT NULL,
+			uploaded_by INTEGER REFERENCES users(id) ON DELETE CASCADE,
+			uploaded_at TIMESTAMP NOT NULL
+		)`,
 	}
 
-	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS posts (
-		id SERIAL PRIMARY KEY,
-		user_id INT REFERENCES users(id) ON DELETE CASCADE,
-		content TEXT,
-		image TEXT,
-		created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-	)`)
-	if err != nil {
-		return err
-	}
-
-	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS study_sessions (
-		id SERIAL PRIMARY KEY,
-		title TEXT,
-		description TEXT,
-		start_time TIMESTAMPTZ,
-		end_time TIMESTAMPTZ,
-		user_id INT REFERENCES users(id) ON DELETE CASCADE,
-		participants INT[]
-	)`)
-	if err != nil {
-		return err
+	for _, query := range queries {
+		_, err := db.Exec(query)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

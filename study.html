@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Study Session Management</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f0f0f0;
+        color: #333;
+        margin: 0;
+        padding: 0;
+      }
+      .container {
+        max-width: 600px;
+        margin: 20px auto;
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+      .btn {
+        display: inline-block;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        cursor: pointer;
+        border-radius: 4px;
+        text-align: center;
+      }
+      .btn:hover {
+        background-color: #0056b3;
+      }
+      .session {
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        padding: 10px;
+        margin-bottom: 10px;
+      }
+      h1,
+      h2 {
+        text-align: center;
+        color: #007bff;
+      }
+      label {
+        display: block;
+        margin-bottom: 5px;
+      }
+      input,
+      textarea,
+      select {
+        width: 100%;
+        padding: 8px;
+        margin-bottom: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Study Session Management</h1>
+
+      <div id="loginFormContainer">
+        <h2>Login</h2>
+        <form id="loginForm">
+          <label for="email">Email:</label>
+          <input type="email" id="email" name="email" required />
+
+          <label for="password">Password:</label>
+          <input type="password" id="password" name="password" required />
+
+          <button type="submit" class="btn">Login</button>
+        </form>
+      </div>
+
+      <button id="startSessionBtn" class="btn" style="display: none">
+        Start a Study Session
+      </button>
+
+      <div id="sessionFormContainer" style="display: none">
+        <h2>Create a Study Session</h2>
+        <form id="sessionForm">
+          <label for="title">Title:</label>
+          <input type="text" id="title" name="title" required />
+
+          <label for="description">Description:</label>
+          <textarea
+            id="description"
+            name="description"
+            rows="4"
+            required
+          ></textarea>
+
+          <label for="startTime">Start Time:</label>
+          <input
+            type="datetime-local"
+            id="startTime"
+            name="startTime"
+            required
+          />
+
+          <label for="endTime">End Time:</label>
+          <input type="datetime-local" id="endTime" name="endTime" required />
+
+          <button type="submit" class="btn">Create Study Session</button>
+        </form>
+      </div>
+
+      <div id="uploadDocumentContainer" style="display: none">
+        <h2>Upload Document</h2>
+        <form id="uploadDocumentForm" enctype="multipart/form-data">
+          <label for="documentTitle">Document Title:</label>
+          <input type="text" id="documentTitle" name="title" required />
+
+          <label for="document">Select Document:</label>
+          <input type="file" id="document" name="document" required />
+
+          <button type="submit" class="btn">Upload Document</button>
+        </form>
+      </div>
+
+      <div id="studySessionDetails"></div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const loginForm = document.getElementById("loginForm");
+        const loginFormContainer =
+          document.getElementById("loginFormContainer");
+        const startSessionBtn = document.getElementById("startSessionBtn");
+        const sessionFormContainer = document.getElementById(
+          "sessionFormContainer"
+        );
+        const sessionForm = document.getElementById("sessionForm");
+        const uploadDocumentContainer = document.getElementById(
+          "uploadDocumentContainer"
+        );
+        const uploadDocumentForm =
+          document.getElementById("uploadDocumentForm");
+        const studySessionDetails = document.getElementById(
+          "studySessionDetails"
+        );
+        let jwtToken = "";
+        let currentSessionID = null;
+
+        loginForm.addEventListener("submit", function (event) {
+          event.preventDefault();
+          const formData = new FormData(loginForm);
+          const data = {
+            email: formData.get("email"),
+            password: formData.get("password"),
+          };
+          fetch("http://localhost:8080/api/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+          })
+            .then((response) => response.json())
+            .then((result) => {
+              if (result.Token) {
+                jwtToken = result.Token;
+                loginFormContainer.style.display = "none";
+                startSessionBtn.style.display = "block";
+                alert("Login successful!");
+                fetchStudySessions();
+              } else {
+                alert("Login failed! Please check your credentials.");
+              }
+            })
+            .catch((error) => {
+              console.error("Error logging in:", error);
+            });
+        });
+
+        startSessionBtn.addEventListener("click", function () {
+          sessionFormContainer.style.display = "block";
+        });
+
+        sessionForm.addEventListener("submit", function (event) {
+          event.preventDefault();
+          const formData = new FormData(sessionForm);
+          const data = {
+            title: formData.get("title"),
+            description: formData.get("description"),
+            start_time: new Date(formData.get("startTime")).toISOString(),
+            end_time: new Date(formData.get("endTime")).toISOString(),
+          };
+          fetch("http://localhost:8080/api/study-sessions", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: "Bearer " + jwtToken,
+            },
+            body: JSON.stringify(data),
+          })
+            .then((response) => response.json())
+            .then((session) => {
+              const sessionElement = document.createElement("div");
+              sessionElement.classList.add("session");
+              sessionElement.innerHTML = `
+                <h3>${session.title}</h3>
+                <p>${session.description}</p>
+                <p>Start Time: ${new Date(
+                  session.start_time
+                ).toLocaleString()}</p>
+                <p>End Time: ${new Date(session.end_time).toLocaleString()}</p>
+              `;
+              studySessionDetails.appendChild(sessionElement);
+              currentSessionID = session.id;
+              uploadDocumentContainer.style.display = "block";
+              alert("Study session created successfully!");
+            })
+            .catch((error) => {
+              console.error("Error creating session:", error);
+            });
+        });
+
+        uploadDocumentForm.addEventListener("submit", function (event) {
+          event.preventDefault();
+          if (!currentSessionID) {
+            alert("Please create a study session first.");
+            return;
+          }
+          const formData = new FormData(uploadDocumentForm);
+          fetch(
+            `http://localhost:8080/api/study-sessions/${currentSessionID}/documents`,
+            {
+              method: "POST",
+              headers: {
+                Authorization: "Bearer " + jwtToken,
+              },
+              body: formData,
+            }
+          )
+            .then((response) => response.json())
+            .then((document) => {
+              alert("Document uploaded successfully!");
+            })
+            .catch((error) => {
+              console.error("Error uploading document:", error);
+            });
+        });
+
+        function fetchStudySessions() {
+          fetch("http://localhost:8080/api/study-sessions", {
+            method: "GET",
+            headers: {
+              Authorization: "Bearer " + jwtToken,
+            },
+          })
+            .then((response) => response.json())
+            .then((sessions) => {
+              sessions.forEach((session) => {
+                const sessionElement = document.createElement("div");
+                sessionElement.classList.add("session");
+                sessionElement.innerHTML = `
+                  <h3>${session.title}</h3>
+                  <p>${session.description}</p>
+                  <p>Start Time: ${new Date(
+                    session.start_time
+                  ).toLocaleString()}</p>
+                  <p>End Time: ${new Date(
+                    session.end_time
+                  ).toLocaleString()}</p>
+                `;
+                studySessionDetails.appendChild(sessionElement);
+              });
+            })
+            .catch((error) => {
+              console.error("Error fetching study sessions:", error);
+            });
+        }
+      });
+    </script>
+  </body>
+</html>
