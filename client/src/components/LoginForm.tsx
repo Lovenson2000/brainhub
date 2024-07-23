@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/use-toast";
+import Link from "next/link";
 
 const FormSchema = z.object({
   email: z.string().email({
@@ -50,10 +51,10 @@ export default function LoginForm() {
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
-          className="w-[25rem] space-y-6 bg-white p-8 rounded-lg shadow-md"
+          className="w-[20rem] md:w-[26rem] space-y-6 bg-white p-8 rounded-lg shadow-md"
         >
           <h2 className="text-2xl text-slate-800 font-bold text-center">
-            Login to your account
+            Log in to your account
           </h2>
           <FormField
             control={form.control}
@@ -81,11 +82,15 @@ export default function LoginForm() {
               </FormItem>
             )}
           />
+          <div className="">
+            <h2 className="text-slate-800">Don't have an account yet?</h2>
+            <Link href="signup" className="text-dark-blue">Sign up</Link>
+          </div>
           <Button
             type="submit"
-            className="w-full bg-light-blue text-white py-2 rounded"
+            className="w-full bg-gradient-to-r from-blue to-light-blue text-white py-2 rounded"
           >
-            Submit
+            Log in
           </Button>
         </form>
       </Form>
