@@ -16,6 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/use-toast";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 const FormSchema = z.object({
   email: z.string().email({
@@ -35,15 +36,39 @@ export default function LoginForm() {
     },
   });
 
-  function onSubmit(data: z.infer<typeof FormSchema>) {
-    toast({
-      title: "You submitted the following values:",
-      description: (
-        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-          <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-        </pre>
-      ),
-    });
+  const router = useRouter();
+
+  async function onSubmit(data: z.infer<typeof FormSchema>) {
+    try {
+      // Make the POST request to login
+      const response = await fetch("http://localhost:8080/api/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Login successful!",
+          description: "Redirecting you to the dashboard...",
+        });
+
+        router.push("/dashboard");
+      } else {
+        const error = await response.json();
+        toast({
+          title: "Login failed",
+          description: error.message || "An error occurred during login.",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred.",
+      });
+    }
   }
 
   return (
@@ -84,7 +109,9 @@ export default function LoginForm() {
           />
           <div className="">
             <h2 className="text-slate-800">Don't have an account yet?</h2>
-            <Link href="signup" className="text-dark-blue">Sign up</Link>
+            <Link href="signup" className="text-dark-blue">
+              Sign up
+            </Link>
           </div>
           <Button
             type="submit"
