@@ -27,7 +27,7 @@ const FormSchema = z.object({
   }),
 });
 
-const API_BASE_URL = process.env.NGROK_URL || 'http://localhost:8080';
+const API_BASE_URL = process.env.NGROK_URL || "http://localhost:8080";
 
 export default function LoginForm() {
   const form = useForm<z.infer<typeof FormSchema>>({
@@ -117,7 +117,7 @@ export default function LoginForm() {
           </div>
           <Button
             type="submit"
-            className="w-full bg-gradient-to-r from-blue to-light-blue text-white py-2 rounded"
+            className="w-full bg-gradient-to-r to-blue from-light-blue text-white py-2 rounded"
           >
             Log in
           </Button>

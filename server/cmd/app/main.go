@@ -89,8 +89,6 @@ func main() {
 
 	app.Use(middleware.Auth())
 
-	// Protected Routes
-
 	// Post routes
 	posts := app.Group("api/posts")
 	posts.Use(middleware.Auth())
