@@ -27,6 +27,8 @@ const FormSchema = z.object({
   }),
 });
 
+const API_BASE_URL = process.env.NGROK_URL || 'http://localhost:8080';
+
 export default function LoginForm() {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -41,7 +43,7 @@ export default function LoginForm() {
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     try {
       // Make the POST request to login
-      const response = await fetch("http://localhost:8080/api/login", {
+      const response = await fetch(`${API_BASE_URL}/api/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

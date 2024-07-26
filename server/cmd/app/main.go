@@ -9,10 +9,23 @@ import (
 	"github.com/Lovenson2000/brainhub/pkg/util"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
 
 func main() {
+
+	err := godotenv.Load()
+	if err != nil {
+		log.Println("No .env file found")
+	}
+
+	ngrokURL := os.Getenv("NGROK_URL")
+	if ngrokURL == "" {
+		log.Println("NGROK_URL is not set")
+	} else {
+		log.Printf("Using ngrok URL: %s\n", ngrokURL)
+	}
 
 	db, err := sqlx.Connect("postgres", os.Getenv("DATABASE_URL"))
 	if err != nil {

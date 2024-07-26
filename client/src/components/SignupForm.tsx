@@ -13,7 +13,6 @@ import { toast } from "@/components/ui/use-toast";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-// Define validation schemas for each step
 const Step1Schema = z.object({
   firstname: z.string().min(1, "First name is required"),
   lastname: z.string().min(1, "Last name is required"),
@@ -38,10 +37,8 @@ const Step3Schema = z.object({
   bio: z.string().optional(),
 });
 
-// Define a type for the resolver context
 type ResolverContext = { step: number; submitter: string };
 
-// Resolver function to validate based on the current step
 const resolver: Resolver<any> = async (data, context) => {
   const ctx: ResolverContext = (context).current;
   let errors = {};
@@ -56,6 +53,8 @@ const resolver: Resolver<any> = async (data, context) => {
 
   return { values: data, errors };
 };
+
+const API_BASE_URL = process.env.NGROK_URL || 'http://localhost:8080';
 
 export default function SignupForm() {
   const [step, setStep] = React.useState(1);
@@ -78,10 +77,8 @@ export default function SignupForm() {
         const newStep = submitter === "prev" ? step - 1 : step + 1;
 
         if (newStep > 3) {
-          // Final submit
           console.log("Final Data Before Submission:", data);
-          // Make the POST request here
-          fetch("http://localhost:8080/api/register", {
+          fetch(`${API_BASE_URL}/api/register`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -115,7 +112,7 @@ export default function SignupForm() {
         }
       },
 
-      // onInvalid callback
+      
       () => {}
     );
     doHandleSubmit(e);
@@ -241,13 +238,12 @@ export default function SignupForm() {
   );
 }
 
-// Component for rendering individual input fields
 interface InputFieldProps {
   name: string;
   label: string;
   placeholder: string;
   type?: string;
-  register: any; // Adjust the type as needed
+  register: any;
 }
 
 function InputField({
