@@ -74,16 +74,6 @@ func GetPostByID(db *sqlx.DB, id int) (*model.Post, error) {
 	return &post, nil
 }
 
-func UpdatePostInDB(db *sqlx.DB, post *model.Post) error {
-	_, err := db.Exec("UPDATE posts SET content=$1, image=$2 WHERE id=$3", post.Content, post.Image, post.ID)
-	return err
-}
-
-func DeletePostFromDB(db *sqlx.DB, id int) error {
-	_, err := db.Exec("DELETE FROM posts WHERE id=$1", id)
-	return err
-}
-
 func CreateTables(db *sqlx.DB) error {
 	queries := []string{
 		`CREATE TABLE IF NOT EXISTS users (
@@ -118,6 +108,18 @@ func CreateTables(db *sqlx.DB) error {
 			url VARCHAR(255) NOT NULL,
 			uploaded_by INTEGER REFERENCES users(id) ON DELETE CASCADE,
 			uploaded_at TIMESTAMP NOT NULL
+		)`,
+		`CREATE TYPE task_status AS ENUM ('To Do', 'In Progress', 'Done');`,
+		`CREATE TYPE task_priority AS ENUM ('Low', 'Normal', 'High');`,
+		`CREATE TABLE IF NOT EXISTS tasks (
+			id SERIAL PRIMARY KEY,
+			user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+			title VARCHAR(100) NOT NULL,
+			description TEXT,
+			start_time TIMESTAMP,
+			due_date TIMESTAMP,
+			priority task_priority DEFAULT 'Normal',
+			status task_status DEFAULT 'To Do',
 		)`,
 	}
 
