@@ -6,7 +6,10 @@
       "variant-white": "#f2f4f6",
       "light-black":"#1e2631",
       "light-white": "#e6edff",
-      "darker-black": "#212121"
+      "darker-black": "#212121",
+      "dark-purple":"#624CF5",
+      "sky":"#3f24ef"
+      
     }
   }
     

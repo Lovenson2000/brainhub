@@ -1,9 +1,15 @@
 import FileViewer from "@/components/fileviewer/FileViewer";
 
 export default function Page() {
-    return (
+  return (
+    <div className="w-full flex">
       <div>
-          <FileViewer />
+        <FileViewer />
       </div>
-    )
-  } 
+      <div>
+        <h2>Study-Room</h2>
+      </div>
+  
+    </div>
+  );
+}

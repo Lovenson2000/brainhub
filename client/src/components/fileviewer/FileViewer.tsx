@@ -30,12 +30,7 @@ export default function FileViewer() {
   const [notes, setNotes] = React.useState<Note[]>([]);
   let noteId = notes.length;
 
-  const handleCreateNote = (text: string) => {
-    console.log("Selected text:", text);
-  };
-
   const renderHighlightTarget = (props: RenderHighlightTargetProps) => {
-    // Log the selected text
     console.log("Selected text:", props.selectedText);
 
     const addNote = () => {

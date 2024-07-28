@@ -52,7 +52,6 @@ const config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        blue: "#2d61de",
         "light-blue": "#4855ff",
         "dark-blue": "#4a73db",
         "variant-white": "#f2f4f6",

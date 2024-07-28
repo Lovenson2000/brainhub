@@ -117,7 +117,7 @@ export default function LoginForm() {
           </div>
           <Button
             type="submit"
-            className="w-full bg-gradient-to-r to-blue from-light-blue text-white py-2 rounded"
+            className="w-full bg-light-blue  text-white py-2 rounded"
           >
             Log in
           </Button>
