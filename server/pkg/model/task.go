@@ -24,5 +24,5 @@ type Task struct {
 	StartTime   string   `json:"start_time" db:"start_time"`
 	DueDate     string   `json:"due_date" db:"due_date"`
 	Status      Status   `json:"status" db:"status"`
-	Priority    Priority `json:"priority" db:"status"`
+	Priority    Priority `json:"priority" db:"priority"`
 }
