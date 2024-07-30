@@ -109,8 +109,6 @@ func CreateTables(db *sqlx.DB) error {
 			uploaded_by INTEGER REFERENCES users(id) ON DELETE CASCADE,
 			uploaded_at TIMESTAMP NOT NULL
 		)`,
-		`CREATE TYPE task_status AS ENUM ('To Do', 'In Progress', 'Done');`,
-		`CREATE TYPE task_priority AS ENUM ('Low', 'Normal', 'High');`,
 		`CREATE TABLE IF NOT EXISTS tasks (
 			id SERIAL PRIMARY KEY,
 			user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
@@ -119,7 +117,7 @@ func CreateTables(db *sqlx.DB) error {
 			start_time TIMESTAMP,
 			due_date TIMESTAMP,
 			priority task_priority DEFAULT 'Normal',
-			status task_status DEFAULT 'To Do',
+			status task_status DEFAULT 'To Do'
 		)`,
 	}
 

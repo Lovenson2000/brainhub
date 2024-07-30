@@ -87,6 +87,14 @@ func main() {
 		return controllers.GetStudySessions(db, c)
 	})
 
+	// Tasks routes (For testing purpose)
+	app.Get("/api/tasks", func(c *fiber.Ctx) error {
+		return controllers.GetAllTasks(db, c)
+	})
+	app.Get("/api/users/:userID/tasks", func(c *fiber.Ctx) error {
+		return controllers.GetTasksByUserID(db, c)
+	})
+
 	app.Use(middleware.Auth())
 
 	// Post routes
@@ -137,7 +145,6 @@ func main() {
 	})
 
 	// Document routes
-	// Document routes
 	studySessions.Post("/:id/documents", func(c *fiber.Ctx) error {
 		return controllers.UploadDocument(db, c)
 	})
@@ -148,12 +155,25 @@ func main() {
 		return controllers.DeleteDocument(db, c)
 	})
 
-	// New Document routes
 	app.Get("/api/documents", func(c *fiber.Ctx) error {
 		return controllers.GetAllDocuments(db, c)
 	})
 	app.Get("/api/users/:userID/documents", func(c *fiber.Ctx) error {
 		return controllers.GetDocumentsByUserID(db, c)
+	})
+
+	tasks := app.Group("/api/tasks")
+	tasks.Get("/:id", func(c *fiber.Ctx) error {
+		return controllers.GetTask(db, c)
+	})
+	tasks.Get("/user/:userID", func(c *fiber.Ctx) error {
+		return controllers.GetTasksByUserID(db, c)
+	})
+	tasks.Post("/", func(c *fiber.Ctx) error {
+		return controllers.CreateTask(db, c)
+	})
+	tasks.Patch("/:id", func(c *fiber.Ctx) error {
+		return controllers.UpdateTask(db, c)
 	})
 
 	log.Fatal(app.Listen(":8080"))

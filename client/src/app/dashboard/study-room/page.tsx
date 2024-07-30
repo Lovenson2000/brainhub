@@ -9,7 +9,6 @@ export default function Page() {
       <div>
         <h2>Study-Room</h2>
       </div>
-  
     </div>
   );
 }

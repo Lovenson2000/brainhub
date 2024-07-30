@@ -7,7 +7,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-func GetTasks(db *sqlx.DB, c *fiber.Ctx) error {
+func GetAllTasks(db *sqlx.DB, c *fiber.Ctx) error {
 	var tasks []model.Task
 
 	query := "SELECT * FROM tasks ORDER BY id ASC"
@@ -54,6 +54,34 @@ func GetTask(db *sqlx.DB, c *fiber.Ctx) error {
 	}
 
 	return c.JSON(task)
+}
+
+func CreateTask(db *sqlx.DB, c *fiber.Ctx) error {
+	var newTask model.Task
+	if err := c.BodyParser(&newTask); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid input",
+		})
+	}
+
+	userID, err := util.ExtractUserIDFromJwtToken(c)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized access",
+		})
+	}
+
+	newTask.UserID = userID
+
+	query := `INSERT INTO tasks (user_id, title, description, start_time, due_date, status, priority) VALUES($1, $2, $3,$4, $5, $6, $7) RETURNING id`
+	err = db.QueryRow(query, newTask.UserID, newTask.Title, newTask.Description, newTask.StartTime, newTask.DueDate, newTask.Status, newTask.Priority).Scan(&newTask.ID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to create study session",
+		})
+	}
+
+	return c.Status(fiber.StatusCreated).JSON(newTask)
 }
 
 func UpdateTask(db *sqlx.DB, c *fiber.Ctx) error {

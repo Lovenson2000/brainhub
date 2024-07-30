@@ -27,28 +27,28 @@ export default function Sidebar() {
           <SidebarItem
             label="Analytics"
             icon={<GoTasklist size={20} />}
-            url="/analytics"
+            url="/dashboard/analytics"
           />
           <SidebarItem
             label="Tasks"
             icon={<GoTasklist size={20} />}
-            url="/tasks"
+            url="/dashboard/task-manager"
           />
           <SidebarItem
             label="Sessions"
             icon={<GoTasklist size={20} />}
-            url="/sessions"
+            url="/dashboard/sessions"
           />
           <SidebarItem
             label="Documents"
             icon={<GoTasklist size={20} />}
-            url="/documents"
+            url="/dashboard/documents"
           />
 
           <SidebarItem
             label="Notes"
             icon={<GoTasklist size={20} />}
-            url="/documents"
+            url="/dashboard/notes"
           />
         </nav>
 

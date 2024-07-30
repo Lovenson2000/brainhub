@@ -64,8 +64,6 @@ func GetStudySessionsByUserId(db *sqlx.DB, c *fiber.Ctx) error {
 }
 
 func CreateStudySession(db *sqlx.DB, c *fiber.Ctx) error {
-	log.Println("Starting CreateStudySession")
-
 	newStudySession := new(model.StudySession)
 
 	if err := c.BodyParser(newStudySession); err != nil {
