@@ -8,8 +8,7 @@ import {
   Resolver,
 } from "react-hook-form";
 import { z } from "zod";
-import { Button } from "@/components/ui/button";
-import { toast } from "@/components/ui/use-toast";
+import { Button } from "../../src/components/ui/button";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -40,7 +39,7 @@ const Step3Schema = z.object({
 type ResolverContext = { step: number; submitter: string };
 
 const resolver: Resolver<any> = async (data, context) => {
-  const ctx: ResolverContext = (context).current;
+  const ctx: ResolverContext = context.current;
   let errors = {};
 
   if (ctx.step === 2 && (!data.password || !data.confirmPassword)) {
@@ -54,7 +53,7 @@ const resolver: Resolver<any> = async (data, context) => {
   return { values: data, errors };
 };
 
-const API_BASE_URL = process.env.NGROK_URL || 'http://localhost:8080';
+const API_BASE_URL = process.env.NGROK_URL ?? "http://localhost:8080";
 
 export default function SignupForm() {
   const [step, setStep] = React.useState(1);
@@ -72,7 +71,6 @@ export default function SignupForm() {
     e.preventDefault();
     const submitter = context.current.submitter;
     const doHandleSubmit = handleSubmit(
-      // onValid callback
       (data) => {
         const newStep = submitter === "prev" ? step - 1 : step + 1;
 
@@ -87,10 +85,6 @@ export default function SignupForm() {
           })
             .then((response) => {
               if (response.ok) {
-                toast({
-                  title: "Success",
-                  description: "Your registration was successful!",
-                });
                 router.push("/login");
               } else {
                 return response.json().then((error) => {
@@ -99,12 +93,7 @@ export default function SignupForm() {
               }
             })
             .catch((error) => {
-              toast({
-                title: "Error",
-                description:
-                  error.message ||
-                  "An error occurred while submitting the form.",
-              });
+              console.log(error);
             });
         } else {
           setStep(newStep);
@@ -112,7 +101,6 @@ export default function SignupForm() {
         }
       },
 
-      
       () => {}
     );
     doHandleSubmit(e);
@@ -120,12 +108,22 @@ export default function SignupForm() {
 
   const handlePrevStep = () => {
     context.current.submitter = "prev";
-    onSubmit(new Event("submit"));
+    onSubmit(
+      new Event("submit", {
+        bubbles: true,
+        cancelable: true,
+      }) as unknown as React.FormEvent
+    );
   };
 
   const handleNextStep = () => {
     context.current.submitter = "next";
-    onSubmit(new Event("submit"));
+    onSubmit(
+      new Event("submit", {
+        bubbles: true,
+        cancelable: true,
+      }) as unknown as React.FormEvent
+    );
   };
 
   return (

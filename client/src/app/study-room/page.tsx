@@ -1,4 +1,4 @@
-import FileViewer from "@/components/fileviewer/FileViewer";
+import FileViewer from "../../components/fileviewer/FileViewer";
 
 export default function Page() {
   return (

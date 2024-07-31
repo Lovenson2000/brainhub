@@ -14,7 +14,6 @@ import {
   FormMessage,
 } from "../components/ui/form";
 import { Input } from "../components/ui/input";
-import { toast } from "../components/ui/use-toast";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -27,7 +26,7 @@ const FormSchema = z.object({
   }),
 });
 
-const API_BASE_URL = process.env.NGROK_URL || "http://localhost:8080";
+const API_BASE_URL = process.env.NGROK_URL ?? "http://localhost:8080";
 
 export default function LoginForm() {
   const form = useForm<z.infer<typeof FormSchema>>({
@@ -53,28 +52,13 @@ export default function LoginForm() {
 
       if (response.ok) {
         const { token, user } = await response.json();
-        localStorage.setItem("token", token)
-        localStorage.setItem("user", JSON.stringify(user))
-
-
-        toast({
-          title: "Login successful!",
-          description: "Redirecting you to the dashboard...",
-        });
+        localStorage.setItem("token", token);
+        localStorage.setItem("user", JSON.stringify(user));
 
         router.push("/dashboard");
-      } else {
-        const error = await response.json();
-        toast({
-          title: "Login failed",
-          description: error.message || "An error occurred during login.",
-        });
       }
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred.",
-      });
+      console.log(error);
     }
   }
 

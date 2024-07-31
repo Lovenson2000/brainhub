@@ -1,11 +1,11 @@
 import Sidebar from "../../components/Sidebar";
 import React from "react";
 
-export interface props {
+export interface Props {
   children?: React.ReactNode;
 }
 
-export default function DashboardLayout({ children }: props) {
+export default function DashboardLayout({ children }: Props) {
   return (
     <div className="dark:bg-slate-900 flex flex-col md:flex-row h-screen">
       <div className="w-full flex-none md:w-64">

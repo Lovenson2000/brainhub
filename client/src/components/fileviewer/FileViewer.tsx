@@ -90,7 +90,7 @@ export default function FileViewer() {
   });
 
   const filePath =
-    "/assets/James Stewart, Daniel K. Clegg, Saleem Watson, Lothar Redlin - Calculus_ Early Transcendentals. 9e-Cengage Learning (2020).pdf";
+    "/assets/beginning-c-5th-edition-ivor-horton.pdf";
 
   return (
     <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">

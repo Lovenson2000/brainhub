@@ -1,10 +1,13 @@
-
 import React, { ComponentType } from "react";
-import dynamic from "../../../../node_modules/next/dynamic";
+import dynamic from "next/dynamic";
 
-const UserDetails: ComponentType = dynamic(() => import("../../../components/UserDetails"), {
-  ssr: false,
-});
+const UserDetails: ComponentType<any> = dynamic(
+  () =>
+    import("../../../components/UserDetails.tsx").then((mod) => mod.default),
+  {
+    ssr: false,
+  }
+);
 
 export default function page() {
   return (
