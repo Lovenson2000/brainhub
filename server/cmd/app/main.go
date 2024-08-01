@@ -175,6 +175,9 @@ func main() {
 	tasks.Patch("/:id", func(c *fiber.Ctx) error {
 		return controllers.UpdateTask(db, c)
 	})
+	tasks.Delete("/:id", func(c *fiber.Ctx) error {
+		return controllers.DeleteTask(db, c)
+	})
 
 	log.Fatal(app.Listen(":8080"))
 }

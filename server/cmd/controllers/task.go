@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"strconv"
+
 	"github.com/Lovenson2000/brainhub/pkg/model"
 	"github.com/Lovenson2000/brainhub/pkg/util"
 	"github.com/gofiber/fiber/v2"
@@ -85,9 +87,14 @@ func CreateTask(db *sqlx.DB, c *fiber.Ctx) error {
 }
 
 func UpdateTask(db *sqlx.DB, c *fiber.Ctx) error {
-	taskID := c.Params("id")
-	var task model.Task
+	taskID, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid Task ID",
+		})
+	}
 
+	var task model.Task
 	if err := c.BodyParser(&task); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid input",
@@ -95,7 +102,7 @@ func UpdateTask(db *sqlx.DB, c *fiber.Ctx) error {
 	}
 
 	query := `UPDATE tasks SET title=$1, description=$2, start_time=$3, due_date=$4, status=$5, priority=$6 WHERE id=$7`
-	_, err := db.Exec(query, query, task.Title, task.Description, task.StartTime, task.DueDate, task.Status, task.Priority, taskID)
+	_, err = db.Exec(query, task.Title, task.Description, task.StartTime, task.DueDate, task.Status, task.Priority, taskID)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to update task",
@@ -103,4 +110,24 @@ func UpdateTask(db *sqlx.DB, c *fiber.Ctx) error {
 	}
 
 	return c.JSON(fiber.Map{"message": "Task updated successfully"})
+}
+
+func DeleteTask(db *sqlx.DB, c *fiber.Ctx) error {
+	taskId, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid Task ID",
+		})
+	}
+
+	_, err = db.Exec("DELETE FROM tasks WHERE id=$1", taskId)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to delete task",
+		})
+	}
+
+	return c.Status(fiber.StatusNoContent).JSON(fiber.Map{
+		"message": "Task deleted",
+	})
 }
