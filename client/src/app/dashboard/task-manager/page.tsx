@@ -1,5 +1,6 @@
 import React, { ComponentType } from "react";
 import dynamic from "next/dynamic";
+import TaskItem from "components/tasks/Task";
 
 const UserDetails: ComponentType<any> = dynamic(
   () =>
@@ -15,6 +16,7 @@ export default function page() {
       <h1>Task Manager</h1>
       <div>
         <UserDetails />
+        <TaskItem />
       </div>
     </div>
   );
